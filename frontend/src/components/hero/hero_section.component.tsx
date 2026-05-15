@@ -26,7 +26,7 @@ const HeroSectionComponent = () => {
           newNotify={notifications.length}
         />
         <div className="relative z-10 mx-auto max-w-7xl px-6 pt-14 pb-24 text-center">
-          <div className="inline-flex items-center justify-center px-4 py-1.5 mb-8 rounded-full bg-opacity-10 border border-white/20 opacity-80 bg-blue-500/20 text-white">
+          <div className="inline-flex items-center justify-center mx-auto px-4 py-1.5 mb-8 rounded-full bg-opacity-10 border border-white/20 opacity-80 bg-blue-500/20 text-white">
             <span className="text-sm font-medium">
               NEW TEXT TO STORY GENERATION
             </span>
@@ -35,11 +35,11 @@ const HeroSectionComponent = () => {
               AI <i className="fa-solid fa-wand-sparkles"></i>
             </span>
           </div>
-          <h1 className="text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-blue-500 to-slate-900 mb-8 tracking-tight">
+          <h1 className="mx-auto max-w-5xl text-5xl sm:text-6xl lg:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-blue-500 to-slate-900 mb-8 tracking-tight leading-tight">
             Unleash Your
             <br />
             Imagination with AI-Generated Stories!
-            <span className="inline-block ml-4">
+            <span className="inline-block ml-4 align-middle">
               <i className="fas fa-bolt text-yellow-400 glow"></i>
             </span>
           </h1>

@@ -13,13 +13,13 @@ const HomeComponent = () => {
   const isLogin = isLoggedIn();
   return (
     <>
-      <div className="grid grid-cols-12 gap-8 px-5 mb-10">
-        <div className="col-span-12 lg:col-span-8">
+      <div className="grid grid-cols-12 items-start gap-8 px-5 mb-10">
+        <div className="col-span-12 lg:col-span-8 min-w-0">
           <FeatureComponent />
           <LatestPostsComponent />
         </div>
-        <div className="col-span-12 lg:col-span-4">
-          <div className="sticky top-24">
+        <div className="col-span-12 lg:col-span-4 min-w-0">
+          <div className="sticky top-24 space-y-6">
             {isLogin && <FeatureProfileComponent />}
             <TrendingTopicComponent />
             <RecommendedWritersComponent />

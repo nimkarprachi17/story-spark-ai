@@ -17,7 +17,7 @@ const FeatureComponent = () => {
           data?.posts?.map((post: Post) => (
             <div
               key={post._id}
-              className="bg-blue-500/10 rounded-lg shadow-sm overflow-hidden"
+              className="h-full bg-blue-500/10 rounded-lg shadow-sm overflow-hidden"
             >
               <img
                 className="h-48 w-full object-cover"
