@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 
 const RecommendedWritersComponent = () => {
+  const [isFollowing, setIsFollowing] = useState(false);
+
   return (
     <section className="bg-blue-500/10 rounded-lg shadow-sm p-6">
       <h3 className="text-lg font-semibold text-gray-300 mb-4">
@@ -19,8 +21,11 @@ const RecommendedWritersComponent = () => {
               <p className="text-xs text-gray-500">Tech Writer</p>
             </div>
           </div>
-          <button className="!rounded-button text-indigo-600 text-sm font-medium hover:text-indigo-700 cursor-pointer">
-            Follow
+          <button 
+            onClick={() => setIsFollowing(!isFollowing)}
+            className="!rounded-button text-indigo-600 text-sm font-medium hover:text-indigo-700 cursor-pointer"
+          >
+            {isFollowing ? "Following" : "Follow"}
           </button>
         </div>
       </div>

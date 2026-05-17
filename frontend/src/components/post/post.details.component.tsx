@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import {
   useGetPostByIdQuery,
@@ -22,6 +22,7 @@ const PostDetailsComponent = () => {
   const { data: relatedPost } = useGetPostByTagQuery(tag || "");
   const [toggleReaction] = useToggleReactionMutation();
   const currentUser = getUserInfo();
+  const [isFollowing, setIsFollowing] = useState(false);
 
   const handleLike = async () => {
     if (!id) return;
@@ -67,8 +68,11 @@ const PostDetailsComponent = () => {
                 </div>
               </div>
               <div className="">
-                <button className="mt-2 rounded bg-blue-500/30 text-gray-300 px-4 py-1 text-sm">
-                  Follow
+                <button 
+                  onClick={() => setIsFollowing(!isFollowing)}
+                  className="mt-2 rounded bg-blue-500/30 text-gray-300 px-4 py-1 text-sm cursor-pointer hover:bg-blue-500/40"
+                >
+                  {isFollowing ? "Following" : "Follow"}
                 </button>
               </div>
             </div>
