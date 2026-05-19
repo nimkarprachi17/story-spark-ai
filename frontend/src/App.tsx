@@ -257,14 +257,24 @@ function App() {
             </RootLayout>
           }
         />
-        <Route
-          path="/explore"
-          element={
-            <RootLayout>
-              <ExploreComponent />
-            </RootLayout>
-          }
-        />
+       <Route
+  path="/explore"
+  element={
+    <ProtectedRoute
+      element={
+        <RootLayout>
+          <ExploreComponent />
+        </RootLayout>
+      }
+      allowedRoles={[
+        USER_ROLE.USER,
+        USER_ROLE.WRITER,
+        USER_ROLE.ADMIN,
+        USER_ROLE.SUPER_ADMIN,
+      ]}
+    />
+  }
+/>
         <Route
           path="/help"
           element={
@@ -291,14 +301,7 @@ function App() {
             />
           }
         />
-        <Route
-          path="/community"
-          element={
-            <RootLayout>
-              <CommunityComponent />
-            </RootLayout>
-          }
-        />
+
 
         <Route
           path="/post/:id"
@@ -325,13 +328,23 @@ function App() {
           }
         />
         <Route
-          path="/contact-us"
-          element={
-            <RootLayout>
-             <Contact/>
-            </RootLayout>
-          }
-        />
+  path="/contact-us"
+  element={
+    <ProtectedRoute
+      element={
+        <RootLayout>
+          <Contact />
+        </RootLayout>
+      }
+      allowedRoles={[
+        USER_ROLE.USER,
+        USER_ROLE.WRITER,
+        USER_ROLE.ADMIN,
+        USER_ROLE.SUPER_ADMIN,
+      ]}
+    />
+  }
+/>
         <Route
           path="/blog"
           element={
@@ -356,14 +369,24 @@ function App() {
             </RootLayout>
           }
         />
-        <Route
-          path="/community"
-          element={
-            <RootLayout>
-              <CommunityComponent />
-            </RootLayout>
-          }
-        />
+       <Route
+  path="/community"
+  element={
+    <ProtectedRoute
+      element={
+        <RootLayout>
+          <CommunityComponent />
+        </RootLayout>
+      }
+      allowedRoles={[
+        USER_ROLE.USER,
+        USER_ROLE.WRITER,
+        USER_ROLE.ADMIN,
+        USER_ROLE.SUPER_ADMIN,
+      ]}
+    />
+  }
+/>
         <Route
           path="*"
           element={
