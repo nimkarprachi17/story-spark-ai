@@ -1,9 +1,17 @@
 import React, { useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 
+interface Preferences {
+  aiProvider: string;
+  defaultGenre: string;
+  targetLength: string;
+  emailNotifications: boolean;
+  autoSave: boolean;
+}
+
 const SettingComponent = () => {
   // Load preferences from localStorage with defaults
-  const [preferences, setPreferences] = useState({
+  const [preferences, setPreferences] = useState<Preferences>({
     aiProvider: localStorage.getItem("pref_aiProvider") || "gemini",
     defaultGenre: localStorage.getItem("pref_defaultGenre") || "🎭 Drama",
     targetLength: localStorage.getItem("pref_targetLength") || "Medium (~600)",
@@ -26,15 +34,15 @@ const SettingComponent = () => {
 
   const lengths = ["Short (~300)", "Medium (~600)", "Long (~1000)"];
 
-  const handleToggle = (key: string) => {
-    setPreferences((prev: any) => ({
+  const handleToggle = (key: keyof Pick<Preferences, "emailNotifications" | "autoSave">) => {
+    setPreferences((prev) => ({
       ...prev,
       [key]: !prev[key],
     }));
   };
 
-  const handleSelect = (key: string, value: string) => {
-    setPreferences((prev: any) => ({
+  const handleSelect = (key: keyof Preferences, value: string) => {
+    setPreferences((prev) => ({
       ...prev,
       [key]: value,
     }));

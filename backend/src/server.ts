@@ -8,6 +8,8 @@ import { Server } from "socket.io";
 import { JwtHalers } from "./utils/jwt.helper";
 import { Secret } from "jsonwebtoken";
 import { setNotificationSocket } from "./socket/notification.socket";
+import { setupCollabSocket } from "./socket/collab.socket";
+import logger from "./utils/logger.util";
 
 dns.setServers(["1.1.1.1", "8.8.8.8"]);
 
@@ -18,7 +20,6 @@ async function connectDB() {
 
 async function main() {
   try {
-    console.log(config.database_url);
     await connectDB();
     const httpServer = http.createServer(app);
     const io = new Server(httpServer, {
@@ -31,6 +32,7 @@ async function main() {
     });
 
     setNotificationSocket(io);
+    setupCollabSocket(io);
 
     io.use((socket, next) => {
       try {
@@ -63,10 +65,10 @@ async function main() {
     });
 
     httpServer.listen(config.port, () => {
-      console.log(`Story-Spark-AI app listening on port ${config.port}`);
+      logger.info(`Story-Spark-AI app listening on port ${config.port}`);
     });
   } catch (error) {
-    console.error("Error connecting to the database:", error);
+    logger.error("Error connecting to the database:", error);
   }
 }
 
@@ -77,7 +79,7 @@ export default async function handler(req: Request, res: Response) {
   try {
     await connectDB();
   } catch (error) {
-    console.error("Error connecting to the database:", error);
+    logger.error("Error connecting to the database:", error);
     res.status(500).json({
       success: false,
       message: "Database unavailable",

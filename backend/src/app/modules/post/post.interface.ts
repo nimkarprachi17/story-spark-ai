@@ -37,5 +37,5 @@ export interface IPostSearchFields {
   tag?: string;
   trendingTopic?: string;
   sortFilter?: "mostPopular";
-  genres?: string[];
+  genres?: string | string[];
 }

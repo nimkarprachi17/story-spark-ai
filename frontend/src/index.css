@@ -1,5 +1,8 @@
 @import url("https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&family=Roboto+Condensed:ital,wght@0,100..900;1,100..900&display=swap");
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-custom: #3b82f6;
   
@@ -24,6 +27,136 @@
 
 @utility glow {
   filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.5));
+}
+
+.motion-card {
+  transform: translateZ(0);
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease,
+    background-color 220ms ease,
+    box-shadow 220ms ease;
+  will-change: transform;
+}
+
+.motion-card:hover {
+  transform: translate3d(0, -6px, 0);
+  box-shadow:
+    0 18px 48px rgba(15, 23, 42, 0.28),
+    0 0 28px rgba(59, 130, 246, 0.14);
+}
+
+.motion-card-subtle {
+  transform: translateZ(0);
+  transition:
+    transform 200ms ease,
+    border-color 200ms ease,
+    background-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.motion-card-subtle:hover {
+  transform: translate3d(0, -3px, 0);
+  box-shadow:
+    0 14px 36px rgba(15, 23, 42, 0.22),
+    0 0 20px rgba(99, 102, 241, 0.12);
+}
+
+.motion-cta {
+  transform: translateZ(0);
+  transition:
+    transform 180ms ease,
+    box-shadow 220ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease;
+  will-change: transform;
+}
+
+.motion-cta:hover {
+  transform: translate3d(0, -2px, 0) scale(1.01);
+}
+
+.motion-cta:active {
+  transform: translate3d(0, 0, 0) scale(0.98);
+}
+
+.motion-cta:disabled {
+  transform: none;
+  cursor: not-allowed;
+}
+
+.motion-icon {
+  transition: transform 200ms ease, color 200ms ease;
+}
+
+.motion-image {
+  transform: translateZ(0);
+  transition: transform 700ms ease;
+}
+
+.group:hover .motion-image {
+  transform: scale(1.045);
+}
+
+.magic-cursor-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.magic-cursor-dot,
+.magic-cursor-glow {
+  position: fixed;
+  left: 0;
+  top: 0;
+  border-radius: 9999px;
+  pointer-events: none;
+  transform: translate3d(calc(var(--cursor-x, -120px) - 50%), calc(var(--cursor-y, -120px) - 50%), 0);
+}
+
+.magic-cursor-dot {
+  width: 9px;
+  height: 9px;
+  border: 1px solid rgba(191, 219, 254, 0.85);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.96), rgba(96, 165, 250, 0.72) 45%, rgba(99, 102, 241, 0.35));
+  box-shadow:
+    0 0 14px rgba(96, 165, 250, 0.55),
+    0 0 28px rgba(129, 140, 248, 0.24);
+}
+
+.magic-cursor-glow {
+  width: 42px;
+  height: 42px;
+  background: radial-gradient(circle, rgba(96, 165, 250, 0.18), rgba(129, 140, 248, 0.08) 45%, transparent 70%);
+  filter: blur(1px);
+  opacity: 0.82;
+}
+
+.magic-cursor-sparkle {
+  position: fixed;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.95), rgba(147, 197, 253, 0.72) 40%, rgba(168, 85, 247, 0) 72%);
+  box-shadow: 0 0 16px rgba(147, 197, 253, 0.34);
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(0.55);
+  animation: magic-sparkle-fade 760ms ease-out forwards;
+}
+
+@keyframes magic-sparkle-fade {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.4) rotate(0deg);
+  }
+  18% {
+    opacity: 0.92;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -110%) scale(1.35) rotate(34deg);
+  }
 }
 
 .hero-3d-scene {
@@ -460,4 +593,67 @@ body {
 html.dark body {
   background-color: #111827;
   color: white;
+}
+
+/* ── Back to Top Button ── */
+#back-to-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 9999;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  color: #ffffff;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.45);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(12px);
+  transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease,
+    box-shadow 0.2s ease;
+}
+
+#back-to-top.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+#back-to-top:hover {
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.65);
+  transform: translateY(-2px);
+}
+
+#back-to-top:active {
+  transform: translateY(0) scale(0.95);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .motion-card,
+  .motion-card:hover,
+  .motion-card-subtle,
+  .motion-card-subtle:hover,
+  .motion-cta,
+  .motion-cta:hover,
+  .motion-cta:active,
+  .group:hover .motion-image,
+  .magic-cursor-dot,
+  .magic-cursor-glow,
+  .magic-cursor-sparkle {
+    transform: none;
+  }
 }

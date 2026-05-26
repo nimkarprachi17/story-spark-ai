@@ -1,4 +1,5 @@
 import baseApi from "../base_api/base.api";
+import { Review } from "../../models/review";
 
 const reviewApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
@@ -9,7 +10,7 @@ const reviewApi = baseApi.injectEndpoints({
       }),
 
       transformResponse: (response: {
-        data: any;
+        data: Review[];
         message: string;
       }) => response.data,
     }),
@@ -21,7 +22,7 @@ const reviewApi = baseApi.injectEndpoints({
       }),
 
       transformResponse: (response: {
-        data: any;
+        data: Review[];
         message: string;
       }) => response.data,
     }),

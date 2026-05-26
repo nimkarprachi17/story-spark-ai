@@ -79,7 +79,8 @@ const getSinglePost = catchAsync(async (req: Request, res: Response) => {
 
 const getPostsByTag = catchAsync(async (req: Request, res: Response) => {
   const tag = routeParam(req.params.tag);
-  const result = await PostService.getPostsByTag(tag);
+  const excludeId = req.query.excludeId as string | undefined;
+  const result = await PostService.getPostsByTag(tag, excludeId);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,

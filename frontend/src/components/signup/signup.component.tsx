@@ -1,4 +1,3 @@
-import AuthLayout from "../auth/AuthLayout";
 import { useForm, SubmitHandler } from "react-hook-form";
 import SSInput from "../ui-component/ss-input/ss-input";
 import SSButton from "../ui-component/ss-button/ss-button";
@@ -43,6 +42,46 @@ const getPasswordError = (password: string) => {
   return "";
 };
 
+type StrengthLevel = "weak" | "medium" | "strong";
+
+const PASSWORD_STRENGTH_CONFIG: Record<
+  StrengthLevel,
+  { label: string; barColor: string; barWidth: string; textColor: string }
+> = {
+  weak: {
+    label: "Weak",
+    barColor: "bg-red-500",
+    barWidth: "w-1/3",
+    textColor: "text-red-400",
+  },
+  medium: {
+    label: "Medium",
+    barColor: "bg-yellow-400",
+    barWidth: "w-2/3",
+    textColor: "text-yellow-300",
+  },
+  strong: {
+    label: "Strong",
+    barColor: "bg-green-500",
+    barWidth: "w-full",
+    textColor: "text-green-400",
+  },
+};
+
+const getStrengthLevel = (passedChecks: number): StrengthLevel => {
+  if (passedChecks <= 2) return "weak";
+  if (passedChecks <= 4) return "medium";
+  return "strong";
+};
+
+const PASSWORD_REQUIREMENTS = [
+  { key: "length" as const, label: "Minimum 8 characters" },
+  { key: "uppercase" as const, label: "One uppercase letter" },
+  { key: "lowercase" as const, label: "One lowercase letter" },
+  { key: "number" as const, label: "One number" },
+  { key: "special" as const, label: "One special character" },
+];
+
 const SignUpComponent = () => {
   const navigate = useNavigate();
   const [emailVerify] = useEmailVerifyMutation();
@@ -58,11 +97,24 @@ const SignUpComponent = () => {
   const [showOtpField, setShowOtpField] = useState<boolean>(false);
   const [registerInfo, setRegisterInfo] = useState<IRegisterInfo>();
   const [expiredAt, setExpiredAt] = useState(0);
-  const [verificationToken, setVerificationToken] = useState<string>("");
 
   const password = watch("password");
   const confirmPassword = watch("confirmPassword");
   const otp = watch("otp");
+  const passwordChecks = {
+    length: password?.length >= 8,
+    uppercase: /[A-Z]/.test(password || ""),
+    lowercase: /[a-z]/.test(password || ""),
+    number: /[0-9]/.test(password || ""),
+    special: /[^A-Za-z0-9]/.test(password || ""),
+  };
+
+  const passedChecks =
+    Object.values(passwordChecks).filter(Boolean).length;
+
+  const strengthLevel = getStrengthLevel(passedChecks);
+  const { label: strengthLabel, barColor, barWidth, textColor } =
+    PASSWORD_STRENGTH_CONFIG[strengthLevel];
 
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     if (data) {
@@ -96,7 +148,8 @@ const SignUpComponent = () => {
         }
       } catch (error) {
         const message =
-          (error as { data?: Array<{ message?: string }> })?.data?.[0]?.message ||
+          (error as { data?: Array<{ message?: string }> })?.data?.[0]
+            ?.message ||
           "Failed to send OTP. Check backend .env email credentials.";
         toast.error(message);
         console.log("error: ", error);
@@ -122,21 +175,17 @@ const SignUpComponent = () => {
     }
     setIsBusy(true);
     try {
-      const otpResponse = await verifyOtp({ 
-        email: registerInfo.email, 
-        otp: enteredOtp 
+      const otpResponse = await verifyOtp({
+        email: registerInfo.email,
+        otp: enteredOtp,
       }).unwrap();
-      
-      // Store the verification token returned from OTP verification
+
       if (otpResponse?.data?.verificationToken) {
-        setVerificationToken(otpResponse.data.verificationToken);
-        
-        // Now register user with verification token
-        const res = await registerUser({ 
+        const res = await registerUser({
           ...registerInfo,
-          verificationToken: otpResponse.data.verificationToken 
+          verificationToken: otpResponse.data.verificationToken,
         }).unwrap();
-        
+
         if (res.data.accessToken) {
           toast.success("OTP validated successfully!");
           storeUserInfo({ accessToken: res.data.accessToken });
@@ -157,131 +206,176 @@ const SignUpComponent = () => {
   };
 
   return (
-  <>
-    <AuthLayout
-      title="Create Account"
-      subtitle="Join StorySparkAI and begin your creative journey."
-    >
-      <div className="w-full space-y-6">
+    <div className="min-h-[calc(100dvh-4.5rem)] bg-slate-900 text-slate-100 flex items-center justify-center relative overflow-hidden px-4 py-8">
+      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-600/20 rounded-full blur-[120px] pointer-events-none" />
 
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-700"></div>
-          </div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-indigo-600/20 rounded-full blur-[120px] pointer-events-none" />
 
-          <div className="relative flex justify-center text-sm">
-            <span className="px-4 text-gray-400 font-semibold">
-              SIGN UP WITH EMAIL
-            </span>
-          </div>
+      <div className="flex w-full max-w-md flex-col justify-center py-12 relative z-10">
+        <div className="sm:mx-auto sm:w-full sm:max-w-md mb-8">
+          <h2 className="text-center text-4xl sm:text-5xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-indigo-400 drop-shadow-sm">
+            STORY SPARK AI
+          </h2>
         </div>
 
-        {!showOtpField ? (
-          <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+        <div className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-2xl p-8 sm:p-10 shadow-2xl">
+          <h3 className="text-center text-2xl font-bold tracking-tight text-slate-200">
+            {showOtpField ? "Verify Your Email" : "Create Account"}
+          </h3>
 
-            <SSInput
-              label="Name"
-              name="name"
-              placeholder="Enter your name"
-              required={true}
-              icon="fas fa-user"
-              register={register}
-              validation={{
-                required: "Name is required",
-                minLength: {
-                  value: 8,
-                  message: "Name must be at least 8 characters",
-                },
-                pattern: {
-                  value: /^[A-Za-z0-9._]+$/,
-                  message:
-                    "Only letters, numbers, underscores, and dots are allowed",
-                },
-              }}
-              error={errors.name}
-            />
-
-            <SSInput
-              label="Email address"
-              name="email"
-              type="email"
-              placeholder="Enter your email"
-              required={true}
-              icon="fas fa-envelope"
-              register={register}
-              error={errors.email}
-            />
-
-            <SSInput
-              label="Password"
-              name="password"
-              type="password"
-              placeholder="Enter your password"
-              required={true}
-              icon="fas fa-lock"
-              register={register}
-              error={errors.password}
-            />
-
-            <p className="text-xs text-gray-500 -mt-2">
-              Use at least 8 characters with uppercase, lowercase,
-              number, and special character.
+          {!showOtpField && (
+            <p className="mt-2 mb-6 text-center text-sm text-slate-400">
+              Join StorySparkAI and begin your creative journey.
             </p>
+          )}
 
-            <SSInput
-              label="Confirm Password"
-              name="confirmPassword"
-              type="password"
-              placeholder="Confirm your password"
-              required={true}
-              icon="fas fa-eye"
-              register={register}
-              error={errors.confirmPassword}
-            />
+          {!showOtpField && (
+            <div className="relative mb-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-700/50"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-4 bg-slate-800/60 text-slate-400 font-semibold">
+                  SIGN UP WITH EMAIL
+                </span>
+              </div>
+            </div>
+          )}
 
-            <SSButton
-              text="Sign Up"
-              type="submit"
-              isLoading={isBusy}
-            />
-          </form>
-        ) : (
-          <div className="space-y-4">
-            <SSInput
-              label="OTP"
-              name="otp"
-              placeholder="Enter your OTP"
-              required={true}
-              icon="fas fa-key"
-              register={register}
-            />
+          {!showOtpField ? (
+            <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
+              <SSInput
+                label="Name"
+                name="name"
+                placeholder="Enter your name"
+                required={true}
+                icon="fas fa-user"
+                register={register}
+                validation={{
+                  required: "Name is required",
+                minLength: {
+                value: 2,
+                message: "Name must be at least 2 characters",
+                },
+                  pattern: {
+                    value: /^[A-Za-z0-9\s._]+$/,
+                    message:
+                      "Only letters, numbers, spaces, underscores, and dots are allowed",
+                  },
+                }}
+                error={errors.name}
+              />
 
-            <SSButton
-              text="Verify OTP"
-              type="button"
-              onClick={handleOtpValidation}
-              isLoading={isBusy}
-            />
-          </div>
-        )}
+              <SSInput
+                label="Email address"
+                name="email"
+                type="email"
+                placeholder="Enter your email"
+                required={true}
+                icon="fas fa-envelope"
+                register={register}
+                error={errors.email}
+              />
 
-        {!showOtpField && (
-          <div className="text-center text-sm text-indigo-600">
-            <a
-              href="/login"
-              className="block text-custom hover:underline"
-            >
-              Already have an account? Sign In
-            </a>
-          </div>
-        )}
+              <SSInput
+                label="Password"
+                name="password"
+                type="password"
+                placeholder="Enter your password"
+                required={true}
+                icon="fas fa-lock"
+                register={register}
+                error={errors.password}
+              />
 
+              <div className="space-y-3 -mt-2">
+                <div
+                  className="w-full h-2 bg-slate-700 rounded-full overflow-hidden"
+                  role="progressbar"
+                  aria-valuenow={passedChecks}
+                  aria-valuemin={0}
+                  aria-valuemax={PASSWORD_REQUIREMENTS.length}
+                  aria-label="Password strength"
+                >
+                  <div
+                    className={`h-full transition-all duration-300 ${barColor} ${barWidth}`}
+                  ></div>
+                </div>
+
+                <p
+                  className={`text-sm font-medium ${textColor}`}
+                  aria-live="polite"
+                >
+                  {strengthLabel} Password
+                </p>
+
+                <ul className="space-y-1 text-xs">
+                  {PASSWORD_REQUIREMENTS.map(({ key, label }) => {
+                    const met = passwordChecks[key];
+                    return (
+                      <li
+                        key={key}
+                        className={met ? "text-green-400" : "text-red-400"}
+                        aria-label={`${label}: ${met ? "met" : "not met"}`}
+                      >
+                        <span aria-hidden="true">{met ? "✅" : "❌"}</span>{" "}
+                        {label}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+
+              <SSInput
+                label="Confirm Password"
+                name="confirmPassword"
+                type="password"
+                placeholder="Confirm your password"
+                required={true}
+                icon="fas fa-eye"
+                register={register}
+                error={errors.confirmPassword}
+              />
+
+              <SSButton text="Sign Up" type="submit" isLoading={isBusy} />
+            </form>
+          ) : (
+            <div className="space-y-5">
+              <SSInput
+                label="OTP"
+                name="otp"
+                placeholder="Enter your OTP"
+                required={true}
+                icon="fas fa-key"
+                register={register}
+              />
+
+              <SSButton
+                text="Verify OTP"
+                type="button"
+                onClick={handleOtpValidation}
+                isLoading={isBusy}
+              />
+            </div>
+          )}
+
+          {!showOtpField && (
+            <p className="mt-8 text-center text-sm text-slate-400">
+              Already have an account?{" "}
+              <a
+                href="/login"
+                className="font-semibold text-blue-400 hover:text-blue-300 transition-colors duration-200"
+              >
+                Sign In
+              </a>
+            </p>
+          )}
+        </div>
       </div>
-    </AuthLayout>
 
-    <Toaster position="top-right" reverseOrder={false} />
-  </>
-);
+      <Toaster position="top-right" reverseOrder={false} />
+    </div>
+  );
 };
 
 export default SignUpComponent;

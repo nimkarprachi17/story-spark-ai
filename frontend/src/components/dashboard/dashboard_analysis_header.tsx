@@ -166,14 +166,15 @@ const DashboardAnalysisHeader: React.FC<{ data: DashboardAnalysis }> = ({ data }
               </svg>
             </div>
           </div>
-          <div className="pt-3 border-t border-white/[0.05]">
-            <div className="h-1.5 bg-white/[0.06] rounded-full overflow-hidden mb-1.5">
-              <div
-                className="h-full bg-gradient-to-r from-amber-500 to-orange-500 rounded-full transition-all duration-500"
+          <div className="mt-4">
+            <div className="h-2 bg-indigo-200 rounded-full">
+              <div className="h-2 bg-yellow-500 rounded-full"
                 style={{
-                  width: `${(data.users.applyForWriter / data.users.total) * 100}%`,
-                }}
-              />
+                  width: `${
+                    (data.users.applyForWriter / data.users.total) * 100
+                  }%`,
+                }}>
+              </div>
             </div>
             <p className="text-[10px] text-slate-600">
               {((data.users.applyForWriter / data.users.total) * 100).toFixed(1)}% of total users

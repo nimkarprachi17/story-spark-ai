@@ -6,7 +6,7 @@
 let currentMode = 'signin';
 
 // ── Google Identity Services (GIS) Client ID ──
-const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = 'const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com'';
 
 /* ── DOM Init & Global Handler Registrations ── */
 document.addEventListener('DOMContentLoaded', () => {
@@ -167,7 +167,7 @@ function toggleAuthMode(mode) {
             
             // Bottom link toggle content
             if (navToggle) {
-                navToggle.innerHTML = `Already have an account? <a class="text-primary hover:text-secondary transition-colors font-semibold cursor-pointer" onclick="toggleAuthMode('signin')">Log In</a>`;
+                navToggle.innerHTML = `Already have an account? <a class="text-primary hover:text-secondary transition-colors font-semibold" href="login.html">Log In</a>`;
             }
             
             // Push address bar quietly without reload
@@ -185,7 +185,7 @@ function toggleAuthMode(mode) {
             
             // Bottom link toggle content
             if (navToggle) {
-                navToggle.innerHTML = `Don't have an account? <a class="text-primary hover:text-secondary transition-colors font-semibold cursor-pointer" onclick="toggleAuthMode('signup')">Sign Up</a>`;
+                navToggle.innerHTML = `Don't have an account? <a class="text-primary hover:text-secondary transition-colors font-semibold" href="signup.html">Sign Up</a>`;
             }
             
             // Push address bar quietly without reload

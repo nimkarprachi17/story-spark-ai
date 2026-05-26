@@ -4,6 +4,7 @@ import {
   useApproveReviewMutation,
   useGetPendingReviewsQuery,
 } from "../../redux/apis/review.api";
+import { Review } from "../../models/review";
 
 const ReviewApprovalComponent = () => {
   const { data: reviews = [], isLoading } =
@@ -36,7 +37,7 @@ const ReviewApprovalComponent = () => {
       </h2>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {reviews.map((review: any) => (
+        {reviews.map((review: Review) => (
           <div
             key={review._id}
             className="border rounded-xl p-5 shadow-md"

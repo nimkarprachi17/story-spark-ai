@@ -37,10 +37,7 @@ app.use(cookieParser());
 app.use("/api/v1", Routers);
 
 // Global error handler
-app.use(globalErrorHandler);
-
-// Handle API not found
-app.use((req: Request, res: Response, next: NextFunction) => {
+app.use((req: Request, res: Response) => {
   res.status(httpStatus.NOT_FOUND).json({
     success: false,
     message: "Not Found",
@@ -51,9 +48,9 @@ app.use((req: Request, res: Response, next: NextFunction) => {
       },
     ],
   });
-  next();
 });
 
+app.use(globalErrorHandler);
 // Cron job to reset request counts at the beginning of each month (skip on Vercel serverless)
 if (!process.env.VERCEL) {
   cron.schedule("0 0 1 * *", async () => {

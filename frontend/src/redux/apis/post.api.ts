@@ -4,6 +4,11 @@ import baseApi from "../base_api/base.api";
 import { POST_URL } from "../base_api/base.endpoints";
 import { tagTypes } from "../tag-types";
 
+interface QueryErrorResponse {
+  status?: number;
+  data?: unknown;
+}
+
 const postApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
     createPost: build.mutation({
@@ -34,7 +39,7 @@ const postApi = baseApi.injectEndpoints({
         };
       },
 
-      transformErrorResponse: (response: any) => {
+      transformErrorResponse: (response: QueryErrorResponse) => {
         return {
           status: response?.status,
           message: "Unable to fetch posts. Please try again later.",
@@ -62,7 +67,7 @@ const postApi = baseApi.injectEndpoints({
         };
       },
 
-      transformErrorResponse: (response: any) => {
+      transformErrorResponse: (response: QueryErrorResponse) => {
         return {
           status: response?.status,
           message: "Unable to fetch latest posts. Please try again later.",
@@ -90,7 +95,7 @@ const postApi = baseApi.injectEndpoints({
         };
       },
 
-      transformErrorResponse: (response: any) => {
+      transformErrorResponse: (response: QueryErrorResponse) => {
         return {
           status: response?.status,
           message: "Unable to fetch featured posts. Please try again later.",
@@ -106,14 +111,11 @@ const postApi = baseApi.injectEndpoints({
         method: "GET",
       }),
 
-      transformResponse: (response: {
-        data: Post;
-        message: string;
-      }) => {
+      transformResponse: (response: { data: Post; message: string }) => {
         return response.data;
       },
 
-      transformErrorResponse: (response: any) => {
+      transformErrorResponse: (response: QueryErrorResponse) => {
         return {
           status: response?.status,
           message: "Unable to fetch post details.",
@@ -124,19 +126,18 @@ const postApi = baseApi.injectEndpoints({
     }),
 
     getPostByTag: build.query({
-      query: (tag: string) => ({
-        url: `/${POST_URL}/tag/${tag}`,
+      // Accepts an object with tag and excludeId
+      query: (arg: { tag: string; excludeId?: string }) => ({
+        url: `/${POST_URL}/tag/${arg.tag}`,
         method: "GET",
+        params: arg.excludeId ? { excludeId: arg.excludeId } : {},
       }),
 
-      transformResponse: (response: {
-        data: Post[];
-        message: string;
-      }) => {
+      transformResponse: (response: { data: Post[]; message: string }) => {
         return response.data;
       },
 
-      transformErrorResponse: (response: any) => {
+      transformErrorResponse: (response: QueryErrorResponse) => {
         return {
           status: response?.status,
           message: "Unable to fetch posts by tag.",

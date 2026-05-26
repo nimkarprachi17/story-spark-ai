@@ -31,8 +31,9 @@ router.post(
   PostController.doFeaturedPosts
 );
 
-router.get("/:id", PostController.getSinglePost);
+
 router.get("/tag/:tag", PostController.getPostsByTag);
+router.get("/:id", PostController.getSinglePost);
 
 router.post(
   "/:id/bookmark",

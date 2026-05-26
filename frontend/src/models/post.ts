@@ -22,7 +22,7 @@ interface Comment {
 
 interface Reaction {
   postId: string;
-  userId: { email: string } | string | any;
+  userId: { email: string } | string;
   type: "like" | "love" | "laugh" | "angry" | "sad";
   _id: string;
 }
