@@ -127,6 +127,8 @@ cp frontend/.env.example frontend/.env
 | `UNSPLASH_KEY_API_SECRET` | For images | Unsplash secret |
 | `VERIFY_EMAIL` | For email | SMTP sender address |
 | `VERIFY_PASSWORD` | For email | SMTP password or app password |
+| `GOOGLE_CLIENT_ID` | For login with google | https://console.cloud.google.com |
+| `CORS_ORIGINS` | For resolve cors |
 
 #### Frontend (`frontend/.env`)
 
@@ -134,12 +136,14 @@ cp frontend/.env.example frontend/.env
 |----------|----------|-------------|
 | `VITE_BASE_URL` | Yes | API base URL, e.g. `http://localhost:5000/api/v1` |
 | `VITE_SOCKET_URL` | No | Socket.IO URL for real-time notifications (optional) |
+| `VITE_GOOGLE_CLIENT_ID` | Yes | https://console.cloud.google.com |
 
 ### Contributing workflow
 
 1. Fork the repository and clone your fork.
 2. Create a branch: `git checkout -b your-feature-branch`
 3. Install with `npm install` at the repo root, configure `.env` files, then `git add`, `git commit`, `git push`, and open a pull request.
+
 
 
 <a id="contributing"></a>

@@ -32,6 +32,10 @@ const ExploreComponent = () => {
     query["searchTerm"] = debounceTerm;
   }
 
+  if (selectedTags.length > 0) {
+    query["genres"] = selectedTags.join(",");
+  }
+
   const { data, isLoading } = useGetPostListsQuery({ ...query });
 
   const filteredPosts =
@@ -142,7 +146,6 @@ const ExploreComponent = () => {
                           checked={selectedTags.includes(genre.toLowerCase())}
                           onChange={() => handleTagClick(genre.toLowerCase())}
                         />
-
                         <span className="ml-3 text-sm text-slate-600 cursor-pointer hover:text-slate-900 transition-colors dark:text-slate-400 dark:hover:text-slate-300">
                           {genre}
                         </span>
@@ -176,7 +179,7 @@ const ExploreComponent = () => {
 
                 {/* Sort */}
                 <div>
-                  <h4 className="font-semibold mb-3 text-slate-300">Sort By</h4>
+                  <h4 className="font-semibold mb-3 text-slate-700 dark:text-slate-300">Sort By</h4>
 
                   <select
                     value={sortBy}
@@ -195,7 +198,7 @@ const ExploreComponent = () => {
 
                 {/* Order */}
                 <div>
-                  <h4 className="font-semibold mb-3 text-slate-300">Order</h4>
+                  <h4 className="font-semibold mb-3 text-slate-700 dark:text-slate-300">Order</h4>
 
                   <select
                     value={sortOrder}
@@ -298,6 +301,7 @@ const ExploreComponent = () => {
             </div>
 
             {!featuredPost && data?.meta && (
+
               <div className="sticky bottom-0 bg-white/90 backdrop-blur-xl border-t border-gray-200 z-20 mt-8 shadow-[0_-10px_40px_-10px_rgba(15,23,42,0.12)] transition-colors duration-300 dark:bg-[#0b1329]/80 dark:border-slate-800 dark:shadow-[0_-10px_40px_-10px_rgba(0,0,0,0.5)]">
                 <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
                   <PaginationComponent

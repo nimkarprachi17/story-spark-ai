@@ -146,6 +146,19 @@ const postApi = baseApi.injectEndpoints({
 
       providesTags: [tagTypes.post],
     }),
+
+    deletePost: build.mutation({
+      query: (id: string) => ({
+        url: `/${POST_URL}/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: [
+        tagTypes.post,
+        tagTypes.user,
+        tagTypes.comment,
+        tagTypes.bookmark,
+      ],
+    }),
   }),
 });
 
@@ -156,4 +169,5 @@ export const {
   useGetFeaturedListsQuery,
   useGetPostByIdQuery,
   useGetPostByTagQuery,
+  useDeletePostMutation,
 } = postApi;
