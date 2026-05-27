@@ -10,7 +10,7 @@ import { AnalysisRouter } from "../app/modules/analysis/analysis.router";
 import { ReviewRouter } from "../app/modules/review/review.router";
 import { ReactionRouter } from "../app/modules/reaction/reaction.router";
 import { ContactRoutes } from "../app/modules/contact/contact.route";
-
+import { ReportRouter } from "../app/modules/report/report.router";
 import { NewsletterRouter } from "../app/modules/newsletter/newsletter.route";
 
 
@@ -79,6 +79,10 @@ const modules = [
   {
     path: "/contact",
     router: ContactRoutes,
+  },
+  {
+    path: "/reports",
+    router: ReportRouter,
   },
 ];
 modules.forEach((route) => router.use(route.path, route.router));

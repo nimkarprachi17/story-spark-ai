@@ -70,12 +70,10 @@ export default function Contact() {
   ): Promise<void> => {
     e.preventDefault();
 
-    // 1. TRUE synchronous lock: absolute first priority to block rapid clicks/spam
     if (isSubmittingRef.current) return;
     isSubmittingRef.current = true;
 
     try {
-      // 2. Clear state BEFORE any async gaps to prevent stale UI
       setError("");
       setSuccess(false);
 
@@ -90,7 +88,6 @@ export default function Contact() {
         message: formData.message.trim(),
       });
 
-      // 3. Backend response validation
       if (response && response.data?.success) {
         setSuccess(true);
         setFormData(INITIAL_FORM_DATA);
@@ -105,7 +102,6 @@ export default function Contact() {
           : "✕ Failed to send message. Please check your connection.";
       setError(message);
     } finally {
-      // 4. Release BOTH the lock and the loading state in all scenarios
       setLoading(false);
       isSubmittingRef.current = false;
     }
@@ -118,7 +114,6 @@ export default function Contact() {
     >
       {/* Background Glow */}
       <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500/10 blur-[120px] rounded-full" />
-
       <div className="absolute bottom-10 right-10 w-80 h-80 bg-indigo-500/10 blur-[130px] rounded-full" />
 
       {/* Main Container */}
@@ -137,7 +132,7 @@ export default function Contact() {
         </div>
 
         {/* Form Container */}
-          <div className="w-full max-w-xl mx-auto group relative">
+        <div className="w-full max-w-lg mx-auto group relative">
           <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-[1.5rem] blur opacity-10 group-hover:opacity-15 transition duration-1000"></div>
 
           <form
@@ -169,24 +164,10 @@ export default function Contact() {
               value={formData.fullname}
               onChange={changeHandler}
               className="
-              w-full
-              bg-gray-100/80
-              border
-              border-gray-200
-              rounded-2xl
-              px-5
-              py-4
-              text-sm
-              sm:text-base
-              text-slate-900
-              placeholder:text-slate-400
-              outline-none
-              transition-[border-color,box-shadow]
-              duration-300
-              hover:border-white/30
-              focus:border-yellow-400
-              focus:ring-2
-              focus:ring-yellow-400/30
+              w-full bg-gray-100/80 border border-gray-200 rounded-2xl px-5 py-4
+              text-sm sm:text-base text-slate-900 placeholder:text-slate-400
+              outline-none transition-[border-color,box-shadow] duration-300
+              hover:border-white/30 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/30
             "
               required
             />
@@ -199,24 +180,10 @@ export default function Contact() {
               value={formData.email}
               onChange={changeHandler}
               className="
-              w-full
-              bg-gray-100/80
-              border
-              border-gray-200
-              rounded-2xl
-              px-5
-              py-4
-              text-sm
-              sm:text-base
-              text-slate-900
-              placeholder:text-slate-400
-              outline-none
-              transition-[border-color,box-shadow]
-              duration-300
-              hover:border-white/30
-              focus:border-yellow-400
-              focus:ring-2
-              focus:ring-yellow-400/30
+              w-full bg-gray-100/80 border border-gray-200 rounded-2xl px-5 py-4
+              text-sm sm:text-base text-slate-900 placeholder:text-slate-400
+              outline-none transition-[border-color,box-shadow] duration-300
+              hover:border-white/30 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/30
             "
               required
             />
@@ -229,24 +196,10 @@ export default function Contact() {
               value={formData.subject}
               onChange={changeHandler}
               className="
-              w-full
-              bg-gray-100/80
-              border
-              border-gray-200
-              rounded-2xl
-              px-5
-              py-4
-              text-sm
-              sm:text-base
-              text-slate-900
-              placeholder:text-slate-400
-              outline-none
-              transition-[border-color,box-shadow]
-              duration-300
-              hover:border-white/30
-              focus:border-yellow-400
-              focus:ring-2
-              focus:ring-yellow-400/30
+              w-full bg-gray-100/80 border border-gray-200 rounded-2xl px-5 py-4
+              text-sm sm:text-base text-slate-900 placeholder:text-slate-400
+              outline-none transition-[border-color,box-shadow] duration-300
+              hover:border-white/30 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/30
             "
               required
             />
@@ -259,25 +212,10 @@ export default function Contact() {
               value={formData.message}
               onChange={changeHandler}
               className="
-              w-full
-              bg-gray-100/80
-              border
-              border-gray-200
-              rounded-2xl
-              px-5
-              py-4
-              text-sm
-              sm:text-base
-              text-slate-900
-              placeholder:text-slate-400
-              outline-none
-              resize-none
-              transition-[border-color,box-shadow]
-              duration-300
-              hover:border-white/30
-              focus:border-yellow-400
-              focus:ring-2
-              focus:ring-yellow-400/30
+              w-full bg-gray-100/80 border border-gray-200 rounded-2xl px-5 py-4
+              text-sm sm:text-base text-slate-900 placeholder:text-slate-400
+              outline-none resize-none transition-[border-color,box-shadow] duration-300
+              hover:border-white/30 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/30
             "
               required
             />
@@ -287,24 +225,12 @@ export default function Contact() {
               type="submit"
               disabled={loading}
               className="
-              relative
-overflow-hidden
-group/btn
-w-full
-py-4
-rounded-2xl
-bg-gray-400
-text-black
-font-bold
-text-sm
-sm:text-base
-transition-[background-color,transform]
-duration-300
-hover:scale-[1.01]
-hover:bg-white
-disabled:opacity-50
-disabled:cursor-not-allowed
-          "
+              relative overflow-hidden group/btn w-full py-4 rounded-2xl
+              bg-gray-400 text-black font-bold text-sm sm:text-base
+              transition-[background-color,transform] duration-300
+              hover:scale-[1.01] hover:bg-white
+              disabled:opacity-50 disabled:cursor-not-allowed
+            "
             >
               <span className="relative z-10 flex items-center justify-center gap-2">
                 {loading ? (
@@ -330,7 +256,7 @@ disabled:cursor-not-allowed
             {success && (
               <div className="bg-green-500/10 border border-green-500/30 rounded-2xl px-4 py-4">
                 <p className="text-green-400 text-sm sm:text-base font-medium text-center">
-                  ✓ Message sent successfully. I’ll get back to you soon.
+                  ✓ Message sent successfully. I'll get back to you soon.
                 </p>
               </div>
             )}

@@ -557,6 +557,12 @@ body {
   scroll-behavior: smooth;
 }
 
+/* Firefox scrollbar support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #646c727e #6a78842c;
+}
+
 ::-webkit-scrollbar-thumb {
   background: #646c727e;
 }

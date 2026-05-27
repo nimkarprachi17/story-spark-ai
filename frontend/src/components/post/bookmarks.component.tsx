@@ -4,6 +4,7 @@ import ExploreViewListComponent from "./post.view.list.component";
 import { Post } from "../../models/post";
 import { useGetMyBookmarksQuery } from "../../redux/apis/bookmark.api";
 import PaginationComponent from "../pagination/pagination.component";
+import { Post } from "../../models/post";
 
 const BookmarksComponent = () => {
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ const BookmarksComponent = () => {
     setSize(pageSize);
   };
 
-  const allPosts = data?.posts || [];
+  const allPosts: Post[] = (data?.posts ?? []) as Post[];
 
   // Implement client-side instant search for bookmarks
   const filteredPosts = allPosts.filter(
