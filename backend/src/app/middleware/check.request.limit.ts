@@ -26,6 +26,9 @@ const checkRequestLimit =
       );
       const { email: userEmail } = verifiedUser;
 
+      await reserveUserQuota(userEmail);
+      res.locals.quotaRefundGuard = createUserQuotaGuard(userEmail);
+
       next();
     } catch (err) {
       next(err);

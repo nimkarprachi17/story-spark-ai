@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { getShortenedText, ITopicData, topicsData, getWordCount, SELECTED_TOPIC_CLASSES } from "./stories.utils";
 import toast, { Toaster } from "react-hot-toast";
-import { useCreatePostMutation } from "../../redux/apis/post.api";
+import { useCreatePostMutation, useDeletePostMutation } from "../../redux/apis/post.api";
 import { useGetProfileInfoQuery } from "../../redux/apis/user.api";
 import jsPDF from "jspdf";
 import BookmarkButton from "../BookmarkButton";
@@ -47,7 +47,12 @@ const StoriesViewComponent: React.FC<StoriesComponentProps> = ({
   const [loading, setLoading] = useState<boolean>(false);
   const [isCopied, setIsCopied] = useState<boolean>(false);
   const [createPost] = useCreatePostMutation();
+  const [deletePost] = useDeletePostMutation();
   const { data: profile } = useGetProfileInfoQuery(undefined, { skip: !isLogin });
+  const lastSavedContentRef = useRef<string>("");
+  const isSavingRef = useRef<boolean>(false);
+  const hasSavedSessionRef = useRef<boolean>(false);
+  const savedPostIdRef = useRef<string | null>(null);
   // Alternate ending state & hooks
   const [endingsCache, setEndingsCache] = useState<{
     [uuid: string]: { style: string; ending: string; fullStory: string }[];
@@ -143,27 +148,59 @@ const StoriesViewComponent: React.FC<StoriesComponentProps> = ({
     } else {
       setSelectedStory(null);
     }
+    // Reset auto-save status for new story session
+    lastSavedContentRef.current = "";
+    hasSavedSessionRef.current = false;
+    savedPostIdRef.current = null;
   }, [stories]);
 
-useEffect(() => {
-  const autoSaveStory = async () => {
-    if (!selectedStory) return;
+  useEffect(() => {
+    const autoSaveStory = async () => {
+      // 1. Prevent guest auto-save requests
+      if (!isLogin || !selectedStory) return;
 
-    const post: IPost = {
-      ...selectedStory,
-      topic: selectTopics,
+      // 2. Prevent duplicate auto-save requests for unchanged story content
+      if (selectedStory.content === lastSavedContentRef.current) {
+        return;
+      }
+
+      // 3. Only one draft/post is created per story session (prevent variation/topic duplicates)
+      if (hasSavedSessionRef.current) {
+        return;
+      }
+
+      // 4. Prevent duplicate network calls while a save is already running
+      if (isSavingRef.current) return;
+
+      isSavingRef.current = true;
+
+      const post: IPost = {
+        ...selectedStory,
+        topic: selectTopics,
+      };
+
+      try {
+        const result = await createPost(post).unwrap();
+        if (result && result.data && result.data._id) {
+          savedPostIdRef.current = result.data._id;
+        }
+        lastSavedContentRef.current = selectedStory.content;
+        hasSavedSessionRef.current = true;
+        toast.success("Story auto-saved!");
+      } catch (error) {
+        console.error("Auto-save failed", error);
+      } finally {
+        isSavingRef.current = false;
+      }
     };
 
-    try {
-      await createPost(post).unwrap();
-      toast.success("Story auto-saved!");
-    } catch (error) {
-      console.error("Auto-save failed", error);
-    }
-  };
+    // Debounce to prevent multiple immediate renders/rerenders from triggering save
+    const timer = setTimeout(() => {
+      autoSaveStory();
+    }, 1000);
 
-  autoSaveStory();
-}, [selectedStory, isLogin, selectTopics, createPost]);
+    return () => clearTimeout(timer);
+  }, [selectedStory?.content, isLogin, selectTopics, createPost]);
 
   const handelStorySelection = (story: IStories) => {
     setSelectedStory(story);
@@ -520,6 +557,13 @@ ${content}
     };
     setLoading(true);
     try {
+      if (savedPostIdRef.current) {
+        try {
+          await deletePost(savedPostIdRef.current).unwrap();
+        } catch (deleteError) {
+          console.warn("Failed to delete auto-saved draft before publishing:", deleteError);
+        }
+      }
       const result = await createPost(post).unwrap();
       if (result) {
         toast.success("Story published successfully!");

@@ -272,6 +272,11 @@ const deletePost = async (postId: string, token: ITokenPayload) => {
   post.deletedBy = user._id;
   await post.save();
 
+  if (user.postsCount > 0) {
+    user.postsCount -= 1;
+    await user.save();
+  }
+
   return post;
 };
 

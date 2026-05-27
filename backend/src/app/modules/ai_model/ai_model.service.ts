@@ -16,7 +16,7 @@ import { assertSuccessfulGeneration } from "./quota.lifecycle";
 import httpStatus from "http-status";
 
 const AUTHENTICATED_GENERATION_TIMEOUT_MS = 60000;
-const FREE_GENERATION_TIMEOUT_MS = 10000;
+const FREE_GENERATION_TIMEOUT_MS = 60000;
 
 const GENERATION_FAILED_MESSAGE =
   "Story generation failed. Your request quota has been restored.";
