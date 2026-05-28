@@ -78,12 +78,39 @@ const changePassword = catchAsync(async (req: Request, res: Response) => {
   const { oldPassword, newPassword } = req.body;
 
   await AuthService.changePassword(user, { oldPassword, newPassword });
+const forgotPassword = catchAsync(async (req: Request, res: Response) => {
+  const { email } = req.body;
+  const result = await AuthService.forgotPassword(email);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "OTP sent to your email successfully!",
+    data: result,
+  });
+});
+
+const resetPassword = catchAsync(async (req: Request, res: Response) => {
+  const { email, password, confirmPassword, verificationToken } = req.body;
+  const result = await AuthService.resetPassword({
+    email,
+    password,
+    confirmPassword,
+    verificationToken,
+  });
+  const { accessToken, refreshToken } = result;
+
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: config.env === "production",
+  });
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
     message:
       "Password changed successfully. All previous sessions have been invalidated.",
+    message: "Password reset successfully!",
+    data: { accessToken },
   });
 });
 
@@ -93,4 +120,6 @@ export const AuthController = {
   refreshToken,
   googleLogin,
   changePassword,
+  forgotPassword,
+  resetPassword,
 };

@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import logo from "../../assets/logoNew.png";
 
+const DEFAULT_GITHUB_ISSUES_URL = "https://github.com/ronisarkarexe/story-spark-ai/issues";
+
 const FooterComponent = () => {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -44,8 +46,11 @@ const FooterComponent = () => {
     { label: "About Us", to: "/about-us" },
     { label: "Careers",  to: "/career"   },
     { label: "Contact",  to: "/contact-us"},
-    { label: "Terms",    to: "/terms"    },
+    { label: "Terms", to: "/terms" },
   ];
+
+  const githubIssuesUrl =
+    import.meta.env.VITE_GITHUB_REPO_ISSUES_URL || DEFAULT_GITHUB_ISSUES_URL;
 
   const resourceLinks = [
     { label: "Blog",         to: "/blog"        },
@@ -53,14 +58,24 @@ const FooterComponent = () => {
     { label: "Community",    to: "/community"   },
     { label: "Guidelines",   to: "/guidelines"  },
     { label: "Contributors", to: "/contributors"},
-    { label: "Report Bug",   to: import.meta.env.VITE_GITHUB_REPO_ISSUES_URL },
+    { label: "Report Bug",   to: githubIssuesUrl },
   ];
 
+
   const legalLinks = [
-    { label: "Privacy Policy",     to: "/privacy-policy" },
-    { label: "Terms & Conditions", to: "/terms"          },
-    { label: "Cookies",            to: "/cookies"        },
+    { label: "Privacy", to: "/privacy-policy" },
+    { label: "Terms", to: "/terms" },
+    { label: "Guidelines", to: "/guidelines" },
   ];
+
+  const socialLinks = [
+    { icon: "fa-instagram", url: "https://www.instagram.com/" },
+    { icon: "fa-linkedin", url: "https://www.linkedin.com/" },
+    { icon: "fa-twitter", url: "https://x.com/" },
+    { icon: "fa-facebook", url: "https://www.facebook.com/" },
+  ];
+
+  const currentYear = new Date().getFullYear();
 
   return (
     <footer className="relative w-full bg-gradient-to-b from-[#090F24] via-[#080E22] to-[#060A18] overflow-hidden">
@@ -162,17 +177,26 @@ const FooterComponent = () => {
               ))}
             </ul>
           </div>
-
-          {/* Legal */}
+          {/* Follow Us */}
           <div className="col-span-6 md:col-span-2 flex flex-col gap-4">
-            <h3 className="text-[11.5px] font-bold tracking-[0.22em] uppercase text-white/70">Legal</h3>
+            <h3 className="text-[11.5px] font-bold tracking-[0.22em] uppercase text-white/70">
+              Follow Us
+            </h3>
+
             <ul className="flex flex-col gap-[12.5px]">
-              {legalLinks.map(({ label, to }) => (
-                <li key={to}>
-                  <Link to={to} className="group relative inline-flex text-[14px] leading-none text-slate-300/85 transition-colors duration-200 hover:text-blue-300">
-                    {label}
-                    <span className="absolute -bottom-0.5 left-0 h-px w-0 bg-blue-400/40 transition-all duration-300 ease-out group-hover:w-full" />
-                  </Link>
+              {socialLinks.map((item) => (
+                <li key={item.icon}>
+                  <a
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex items-center gap-2.5 text-[14px] text-slate-300/85 hover:text-blue-300 transition-all duration-200"
+                  >
+                    <i
+                      className={`fa-brands ${item.icon} text-[15px] text-slate-400 group-hover:text-blue-300 transition-colors`}
+                    />
+                    <span className="capitalize">{item.icon.replace("fa-", "")}</span>
+                  </a>
                 </li>
               ))}
             </ul>
@@ -228,27 +252,27 @@ const FooterComponent = () => {
 
         <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-[12px] text-slate-400/80">
           <div className="flex flex-wrap items-center justify-center sm:justify-start gap-x-2.5 gap-y-1">
-            <span>&copy; 2025 StorySparkAI. All rights reserved.</span>
+            <span className="text-slate-400/80">&copy; {currentYear} StorySparkAI. All rights reserved.</span>
             <span className="hidden sm:inline text-white/[0.12]">|</span>
             <span className="italic text-slate-400/60">Crafted for storytellers</span>
           </div>
           <div className="flex items-center gap-2.5">
-            {(["Privacy", "Terms", "Cookies"] as const).map((item, i, arr) => (
-              <span key={item} className="flex items-center gap-2.5">
-                <Link
-                  to={item === "Privacy" ? "/privacy-policy" : item === "Terms" ? "/terms" : "/cookies"}
-                  className="text-slate-400/80 transition-colors duration-200 hover:text-blue-300"
-                >
-                  {item}
-                </Link>
-                {i < arr.length - 1 && <span className="text-white/[0.12]">|</span>}
-              </span>
-            ))}
-          </div>
-        </div>
+            {legalLinks.map(({ label, to }, i) => (
+  <span key={label}>
+    <Link to={to}>
+      {label}
+    </Link>
 
-      </div>
-    </footer>
+    {i < legalLinks.length - 1 && (
+      <span className="text-white/[0.12]">|</span>
+    )}
+  </span>
+))}
+          </div>
+
+        </div>
+        </div>
+</footer>
   );
 };
 

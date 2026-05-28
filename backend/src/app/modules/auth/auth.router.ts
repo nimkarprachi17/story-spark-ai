@@ -4,6 +4,7 @@ import validateRequest from "../../middleware/validate.request";
 import { UserValidator } from "../user/user.validation";
 import auth from "../../middleware/auth.middleware";
 import { ENUM_USER_ROLE } from "../../../enums/user";
+import ipRateLimiter from "../../middleware/ip.rate-limiter";
 const router = express.Router();
 
 // Login API route
@@ -20,6 +21,7 @@ router.post("/google-login", AuthController.googleLogin);
 router.post(
   "/register",
   validateRequest(UserValidator.register),
+  ipRateLimiter,
   AuthController.register
 );
 
@@ -36,6 +38,18 @@ router.post(
     ENUM_USER_ROLE.SUPER_ADMIN
   ),
   AuthController.changePassword
+// Forgot Password API route
+router.post(
+  "/forgot-password",
+  validateRequest(UserValidator.forgotPassword),
+  AuthController.forgotPassword
+);
+
+// Reset Password API route
+router.post(
+  "/reset-password",
+  validateRequest(UserValidator.resetPassword),
+  AuthController.resetPassword
 );
 
 export const AuthRouter = router;

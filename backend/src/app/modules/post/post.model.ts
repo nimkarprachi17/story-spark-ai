@@ -8,6 +8,8 @@ export const PostSchema: Schema<IPost> = new Schema<IPost, PostModel>(
     tag: { type: String, required: true },
     imageURL: { type: String, required: true },
     language: { type: String, default: "English" },
+    emotions: [{ type: String }],
+    genre: { type: String },
     topic: [
       {
         title: { type: String, required: true },

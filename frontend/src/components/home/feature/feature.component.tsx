@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import BookmarkButton from "../../BookmarkButton";
 import React, { useState } from "react";
 
-import { FaLinkedin, FaEnvelope, FaTwitter, FaLink } from "react-icons/fa";
+import { FaLinkedin, FaEnvelope, FaLink } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
 
 const FeatureComponent = () => {
