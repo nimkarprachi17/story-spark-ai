@@ -492,13 +492,14 @@ function toggleConfirmPasswordVisibility() {
 }
 
 /* ── Form Submission handling ── */
-function handleFormSubmit(e) {
+async function handleFormSubmit(e) {
     e.preventDefault();
     if (isSubmitting) return;
 
     const emailField = document.getElementById('email-field');
     const nameField = document.getElementById('name-field');
     const passwordField = document.getElementById('password-field');
+    const rememberCheckbox = document.getElementById('remember');
     const confirmPasswordField = document.getElementById('confirm-password-field');
     if (!emailField) return;
 
@@ -521,20 +522,47 @@ function handleFormSubmit(e) {
 
     const email = (emailField.value || '').trim();
     const name = (nameField && nameField.value ? nameField.value.trim() : '');
+    const password = (passwordField && passwordField.value ? passwordField.value : '');
+    const rememberMe = rememberCheckbox ? rememberCheckbox.checked : false;
 
     setSubmitting(true);
     setAlert('info', currentMode === 'signup' ? 'Creating your account…' : 'Signing you in…');
 
-    window.setTimeout(() => {
-        setSubmitting(false);
+    try {
+        const endpoint = currentMode === 'signup' ? '/api/auth/register' : '/api/auth/login';
+        const body = currentMode === 'signup'
+            ? { email, name, password }
+            : { email, password, rememberMe };
+
+        const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            setAlert('error', data.message || 'Something went wrong. Please try again.');
+            setSubmitting(false);
+            return;
+        }
+
+        localStorage.setItem('accessToken', data.data.accessToken);
+
         if (currentMode === 'signin') {
-            setAlert('success', `Signed in as <span class="font-semibold">${escapeHtml(email)}</span>.`);
+            setAlert('success', `Signed in as <span class="font-semibold">${escapeHtml(email)}</span>. Redirecting…`);
+            setTimeout(() => { window.location.href = '/dashboard'; }, 1000);
         } else {
             const greeting = name ? `Welcome, <span class="font-semibold">${escapeHtml(name)}</span>!` : 'Welcome!';
             setAlert('success', `${greeting} Your account is ready. Redirecting to sign in…`);
-            window.setTimeout(() => toggleAuthMode('signin'), 900);
+            setTimeout(() => toggleAuthMode('signin'), 900);
         }
-    }, 900);
+    } catch (err) {
+        setAlert('error', 'Network error. Please check your connection and try again.');
+    }
+
+    setSubmitting(false);
 }
 
 function escapeHtml(text) {

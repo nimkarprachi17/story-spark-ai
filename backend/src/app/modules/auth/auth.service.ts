@@ -15,8 +15,8 @@ import { GamificationService } from "../gamification/gamification.service";
 
 const googleClient = new OAuth2Client(config.google_client_id);
 
-const login = async (payload: AuthModel) => {
-  const { email: userEmail, password } = payload;
+const login = async (payload: AuthModel & { rememberMe?: boolean }) => {
+  const { email: userEmail, password, rememberMe } = payload;
   const isExistUser = await User.findOne({ email: userEmail });
   if (!isExistUser) {
     throw new ApiError(httpStatus.NOT_FOUND, "User not found!");
@@ -35,7 +35,7 @@ const login = async (payload: AuthModel) => {
   const accessToken = JwtHalers.createToken(
     { _id, email, role, subscriptionType, name, postsCount, tokenVersion },
     config.jwt.secret as Secret,
-    config.jwt.expires_in as string
+    rememberMe ? "30d" : "15m"
   );
   const refreshToken = JwtHalers.createToken(
     { _id, email, role, subscriptionType, name, postsCount, tokenVersion },
