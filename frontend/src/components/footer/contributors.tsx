@@ -1,8 +1,4 @@
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { Globe, GitPullRequest, Users } from "lucide-react";
-import ImageFallback from "../ImageFallback";
-import { useEffect, useRef, useState, useCallback } from "react";
+﻿import { useEffect, useRef, useState, useCallback } from "react";
 import {
   Globe,
   GitPullRequest,
@@ -24,7 +20,7 @@ interface Contributor {
   contributions: number;
 }
 
-/* ───────────── Floating Particles Background ───────────── */
+/* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ Floating Particles Background ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
 const ParticleField = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -122,7 +118,7 @@ const ParticleField = () => {
   );
 };
 
-/* ───────────── Animated Number Counter ───────────── */
+/* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ Animated Number Counter ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
 const AnimatedCounter = ({
   value,
   suffix = "",
@@ -164,7 +160,7 @@ const AnimatedCounter = ({
   return <span ref={ref}>0{suffix}</span>;
 };
 
-/* ───────────── Contributor Card with 3D Tilt ───────────── */
+/* ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ Contributor Card with 3D Tilt ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ */
 const ContributorCard = ({
   contributor,
   index,
@@ -183,19 +179,19 @@ const ContributorCard = ({
     {
       glow: "rgba(251,191,36,0.3)",
       badge: "bg-gradient-to-r from-amber-400 to-yellow-500",
-      label: "🥇",
+      label: "≡ƒÑç",
       borderColor: "rgba(251,191,36,0.4)",
     },
     {
       glow: "rgba(148,163,184,0.3)",
       badge: "bg-gradient-to-r from-slate-300 to-gray-400",
-      label: "🥈",
+      label: "≡ƒÑê",
       borderColor: "rgba(148,163,184,0.3)",
     },
     {
       glow: "rgba(251,146,60,0.25)",
       badge: "bg-gradient-to-r from-orange-400 to-amber-600",
-      label: "🥉",
+      label: "≡ƒÑë",
       borderColor: "rgba(251,146,60,0.3)",
     },
   ];
@@ -385,9 +381,9 @@ const ContributorCard = ({
   );
 };
 
-/* ═══════════════════════════════════════════════════════════
+/* ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
    MAIN COMPONENT
-   ═══════════════════════════════════════════════════════════ */
+   ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ */
 const ContributorsComponent = () => {
   const [contributors, setContributors] = useState<Contributor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -403,11 +399,9 @@ const ContributorsComponent = () => {
           "https://api.github.com/repos/ronisarkarexe/story-spark-ai/contributors"
         );
         const data = await response.json();
-  
         if (Array.isArray(data)) {
           const filtered = data.filter(
-          (contributor: Contributor) =>
-            contributor.contributions >= 1
+            (contributor: Contributor) => contributor.contributions >= 1
           );
           setContributors(filtered);
         }
@@ -417,7 +411,6 @@ const ContributorsComponent = () => {
         setLoading(false);
       }
     };
-  
     fetchContributors();
   }, []);
 
@@ -430,7 +423,7 @@ const ContributorsComponent = () => {
     ? Math.max(...contributors.map((c) => c.contributions))
     : 1;
 
-  /* ── GSAP scroll animations ── */
+  /* ΓöÇΓöÇ GSAP scroll animations ΓöÇΓöÇ */
   useEffect(() => {
     if (loading) return;
 
@@ -642,7 +635,7 @@ const ContributorsComponent = () => {
       />
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-20 md:py-28">
-        {/* ─── HERO ─── */}
+        {/* ΓöÇΓöÇΓöÇ HERO ΓöÇΓöÇΓöÇ */}
         <div ref={heroRef} className="text-center mb-20 md:mb-28">
           <div className="hero-badge inline-flex items-center gap-2.5 rounded-full border border-indigo-500/20 bg-indigo-500/5 px-5 py-2 text-sm text-indigo-300 mb-8">
             <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -669,7 +662,7 @@ const ContributorsComponent = () => {
           </div>
 
           <p className="hero-subtitle mt-8 text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
-            The brilliant minds behind StorySparkAI — building, iterating, and
+            The brilliant minds behind StorySparkAI ΓÇö building, iterating, and
             pushing the boundaries of AI-powered storytelling.
           </p>
 
@@ -687,7 +680,7 @@ const ContributorsComponent = () => {
           </div>
         </div>
 
-        {/* ─── STATS ─── */}
+        {/* ΓöÇΓöÇΓöÇ STATS ΓöÇΓöÇΓöÇ */}
         <div
           ref={statsRef}
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-20 md:mb-28"
@@ -762,7 +755,7 @@ const ContributorsComponent = () => {
           ))}
         </div>
 
-        {/* ─── SECTION HEADER ─── */}
+        {/* ΓöÇΓöÇΓöÇ SECTION HEADER ΓöÇΓöÇΓöÇ */}
         <div className="flex items-center gap-4 mb-12">
           <div className="h-px flex-1 bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent" />
           <h2 className="text-2xl md:text-3xl font-bold text-white flex items-center gap-3">
@@ -772,7 +765,7 @@ const ContributorsComponent = () => {
           <div className="h-px flex-1 bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent" />
         </div>
 
-        {/* ─── CONTRIBUTORS GRID ─── */}
+        {/* ΓöÇΓöÇΓöÇ CONTRIBUTORS GRID ΓöÇΓöÇΓöÇ */}
         {loading ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             {[...Array(8)].map((_, i) => (
@@ -809,7 +802,7 @@ const ContributorsComponent = () => {
           </div>
         )}
 
-        {/* ─── CTA ─── */}
+        {/* ΓöÇΓöÇΓöÇ CTA ΓöÇΓöÇΓöÇ */}
         <div ref={ctaRef} className="mt-24 md:mt-32">
           <div
             className="cta-container relative rounded-3xl p-10 md:p-14 overflow-hidden text-center"
@@ -860,30 +853,6 @@ const ContributorsComponent = () => {
                   boxShadow: "0 8px 32px rgba(99,102,241,0.3)",
                 }}
               >
-                <div className="relative mb-5">
-                  <ImageFallback
-                    src={contributor.avatar_url}
-                    alt={contributor.login}
-                    className="h-24 w-24 rounded-full border-4 border-blue-500/20 object-cover transition-all duration-300 group-hover:border-blue-400/50"
-                  />
-
-                  <div className="absolute inset-0 rounded-full bg-blue-500/10 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                </div>
-
-                <h3 className="text-lg font-semibold text-white">
-                  {contributor.login}
-                </h3>
-
-                <p className="mt-2 text-sm text-slate-400">
-                  {contributor.contributions} contributions
-                </p>
-
-                <div className="mt-4 inline-flex items-center gap-2 text-blue-300 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <Globe size={16} />
-                  View Profile
-                </div>
-              </motion.a>
-            ))}
                 <Code2
                   size={20}
                   className="transition-transform duration-300 group-hover:rotate-12"
