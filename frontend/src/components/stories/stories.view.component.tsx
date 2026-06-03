@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
+import DOMPurify from "dompurify";
 import { getShortenedText, ITopicData, topicsData, getWordCount, SELECTED_TOPIC_CLASSES } from "./stories.utils";
 import { formatReadingStats } from "../../utils/story-utils";
 import toast, { Toaster } from "react-hot-toast";
@@ -72,7 +73,17 @@ interface StoriesComponentProps {
   isLogin: boolean;
   setStories: (stories: IStories[]) => void;
   onPublishSuccess?: () => void;
-  isLoading: boolean;
+}
+
+interface IRelatedStoriesComponentProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  posts: any[];
+  currentPostId: string;
+}
+
+interface IPost extends IStories {
+  topic: ITopicData[];
+  isPublished?: boolean;
 }
 
 type StorySentenceSegment = {
@@ -184,6 +195,41 @@ const createDocxBlob = ({
   });
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const StoryRemixModal = StoryRemix as React.ComponentType<any>;
+
+const StoryWorldMapModal = StoryWorldMap as React.ComponentType<{
+  story?: string;
+  storyContent?: string;
+  title?: string;
+  onClose: () => void;
+}>;
+
+export const RelatedStoriesComponent: React.FC<IRelatedStoriesComponentProps> = ({
+  posts,
+  currentPostId,
+}) => {
+  const navigate = useNavigate();
+  const filteredPosts = posts.filter((post) => post._id !== currentPostId);
+
+  return (
+    <div className="mt-8">
+      <h4 className="text-lg font-bold text-slate-200 mb-4">Related Content</h4>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {filteredPosts.map((post) => (
+          <div
+            key={post._id}
+            onClick={() => navigate(`/stories/${post._id}`)}
+            className="p-4 bg-slate-700/40 rounded-xl border border-slate-600/30 cursor-pointer hover:bg-slate-700/60 transition-colors"
+          >
+            <p className="text-sm font-semibold text-white truncate">{post.title}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const StoriesViewComponent: React.FC<StoriesComponentProps> = ({
   stories,
   isLogin,
@@ -269,111 +315,162 @@ const StoriesViewComponent: React.FC<StoriesComponentProps> = ({
         localStorage.setItem("lastReadDate", todayStr);
         setReadingStreak(newStreak);
       } else {
-        setReadingStreak(streak);
+        setError(getErrorMessage(err));
       }
+      toast.error("Failed to generate alternate endings.");
+      if (res && res.data) {
+        setEndingsCache((prev) => ({
+          ...prev,
+          [selectedStory.uuid]: res.data,
+        }));
+
+        toast.success("Alternate endings generated successfully!");
+      } else {
+        toast.error("Failed to generate alternate endings.");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to generate alternate endings. Please try again.");
+    } finally {
+      toast.dismiss(toastId);
+      setIsGeneratingEndings(false);
     }
-  }, [selectedStory]);
+  };
 
-  useEffect(() => {
-    setSelectTopics(topics.filter((topic) => topic.selected));
-  }, [topics]);
+  const handleApplyEnding = (endingData: { style: string; ending: string; fullStory: string }) => {
+    if (!selectedStory) return;
 
-  useEffect(() => {
-    const player = audioPlayerRef.current;
-    return () => {
-      player?.stop();
+    const updatedStory = { ...selectedStory, content: endingData.fullStory };
+    setSelectedStory(updatedStory);
+    setStories(stories.map((s) => (s.uuid === selectedStory.uuid ? updatedStory : s)));
+
+    const updatedStory = {
+      ...selectedStory,
+      content: endingData.fullStory,
     };
-  }, [location.pathname]);
+    setSelectedStory(updatedStory);
+    setStories(
+      stories.map((s) => (s.uuid === selectedStory.uuid ? updatedStory : s))
+    );
 
-  useEffect(() => {
-    setNarrationWordIndex(0);
-    setNarrationState("idle");
-  }, [selectedStory?.uuid]);
+    toast.success(`${endingData.style} applied to story!`);
+  };
 
-  const sentenceSegments = useMemo(() => {
-    return buildSentenceSegments(selectedStory?.content ?? "");
-  }, [selectedStory?.content]);
+  const handleResetEnding = () => {
+    if (!selectedStory) return;
+    const originalContent = originalStoryContent[selectedStory.uuid];
+    if (!originalContent) return;
 
-  useEffect(() => {
-    if (stories && stories.length > 0) {
-      const initialStory = stories[0];
-      setSelectedStory(initialStory);
-      dispatch(
-        setStory({
-          id: initialStory.uuid,
-          title: initialStory.title,
-          chapters: [
-            {
-              id: 1,
-              title: "Chapter 1",
-              content: initialStory.content,
-              createdAt: new Date().toISOString(),
-            },
-          ],
-        })
-      );
-    } else {
-      setSelectedStory(null);
+    const updatedStory = { ...selectedStory, content: originalContent };
+    setSelectedStory(updatedStory);
+    setStories(stories.map((s) => (s.uuid === selectedStory.uuid ? updatedStory : s)));
+    toast.success("Reverted to original story ending!");
+  };
+
+
+    const updatedStory = {
+      ...selectedStory,
+      content: originalContent,
+    };
+    setSelectedStory(updatedStory);
+    setStories(
+      stories.map((s) => (s.uuid === selectedStory.uuid ? updatedStory : s))
+    );
+    toast.success("Reverted to original story ending!");
+  };
+
+  const [isPlayingAudio, setIsPlayingAudio] = useState<boolean>(false);
+  const [isPausedAudio, setIsPausedAudio] = useState<boolean>(false);
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleTextToSpeech = () => {
+    if (!selectedStory?.content) return;
+
+    if (!("speechSynthesis" in window)) {
+      toast.error("Text-to-speech is not supported in this browser.");
+      return;
     }
-    lastSavedContentRef.current = "";
-    hasSavedSessionRef.current = false;
-    savedPostIdRef.current = null;
-  }, [stories, dispatch]);
 
-  useEffect(() => {
-    const autoSaveStory = async () => {
-      if (!isLogin || !selectedStory) return;
-      if (selectedStory.content === lastSavedContentRef.current) return;
-      if (hasSavedSessionRef.current) return;
-      if (isSavingRef.current) return;
-
-      isSavingRef.current = true;
-
-      const post: IPost = {
-        ...selectedStory,
-        topic: selectTopics,
-        isPublished: false,
+    if (isPlayingAudio) {
+      if (isPausedAudio) {
+        window.speechSynthesis.resume();
+        setIsPausedAudio(false);
+        toast.success("Resumed reading story");
+      } else {
+        window.speechSynthesis.pause();
+        setIsPausedAudio(true);
+        toast.success("Paused reading story");
+      }
+    } else {
+      window.speechSynthesis.cancel();
+      const cleanContent = selectedStory.content.replace(/<[^>]*>/g, "");
+      const utterance = new SpeechSynthesisUtterance(cleanContent);
+      
+      utterance.onend = () => {
+        setIsPlayingAudio(false);
+        setIsPausedAudio(false);
       };
 
-      try {
-        const result = await createPost(post).unwrap();
-        if (result && result.data && result.data._id) {
-          savedPostIdRef.current = result.data._id;
-        }
-        lastSavedContentRef.current = selectedStory.content;
-        hasSavedSessionRef.current = true;
-        toast.success("Story auto-saved!");
-      } catch (error) {
-        console.error("Auto-save failed", error);
-      } finally {
-        isSavingRef.current = false;
+      utterance.onerror = (e) => {
+        console.error("SpeechSynthesis error:", e);
+        setIsPlayingAudio(false);
+        setIsPausedAudio(false);
+      };
+
+      const voices = window.speechSynthesis.getVoices();
+      const englishVoice = voices.find(
+        (v) => v.lang.startsWith("en-") && v.name.includes("Google")
+      ) || voices.find((v) => v.lang.startsWith("en-"));
+      if (englishVoice) {
+        utterance.voice = englishVoice;
       }
-    };
 
-    const timer = setTimeout(() => {
-      autoSaveStory();
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [selectedStory, selectedStory?.content, isLogin, selectTopics, createPost]);
-
-  const handelStorySelection = (story: IStories) => {
-    setSelectedStory(story);
-    dispatch(
-      setStory({
-        id: story.uuid,
-        title: story.title,
-        chapters: [
-          {
-            id: 1,
-            title: "Chapter 1",
-            content: story.content,
-            createdAt: new Date().toISOString(),
-          },
-        ],
-      })
-    );
+      window.speechSynthesis.speak(utterance);
+      setIsPlayingAudio(true);
+      setIsPausedAudio(false);
+      toast.success("Playing story audio");
+    }
   };
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleStopAudio = () => {
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+    setIsPlayingAudio(false);
+    setIsPausedAudio(false);
+    toast.success("Stopped audio playback");
+  };
+
+  const lastReadDate = localStorage.getItem("lastReadDate");
+  const streak = Number(localStorage.getItem("readingStreak") || "0");
+
+  if (lastReadDate !== today) {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    let newStreak = 1;
+
+    if (lastReadDate === yesterday.toDateString()) {
+      newStreak = streak + 1;
+    }
+
+    localStorage.setItem("readingStreak", String(newStreak));
+    localStorage.setItem("lastReadDate", today);
+
+    setReadingStreak(newStreak);
+  } else {
+    setReadingStreak(streak);
+  }
+}, [selectedStory]);
+  useEffect(() => {
+    if (selectedStory && !originalStoryContent[selectedStory.uuid]) {
+      setOriginalStoryContent((prev) => ({
+        ...prev,
+        [selectedStory.uuid]: selectedStory.content,
+      }));
+    }
+  }, [selectedStory, originalStoryContent]);
 
   const handleGenerateAlternateEndings = async () => {
     if (!selectedStory) return;
@@ -491,6 +588,145 @@ const StoriesViewComponent: React.FC<StoriesComponentProps> = ({
     toast.success("Stopped audio playback");
   };
 
+  useEffect(() => {
+    return () => {
+      if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+
+  useEffect(() => {
+    setSelectTopics(topics.filter((topic) => topic.selected));
+  }, [topics]);
+
+  useEffect(() => {
+    const player = audioPlayerRef.current;
+
+    return () => { player?.stop(); };
+  }, [location.pathname]);
+
+  useEffect(() => { setNarrationWordIndex(0); setNarrationState("idle"); }, [selectedStory?.uuid]);
+
+  const sentenceSegments = useMemo(() => buildSentenceSegments(selectedStory?.content ?? ""), [selectedStory?.content]);
+
+  useEffect(() => {
+    if (stories && stories.length > 0) {
+      setSelectedStory(stories[0]);
+      dispatch(setStory({
+        id: stories[0].uuid,
+        title: stories[0].title,
+        chapters: [{ id: 1, title: "Chapter 1", content: stories[0].content, createdAt: new Date().toISOString() }],
+      }));
+    } else {
+      setSelectedStory(null);
+    }
+    lastSavedContentRef.current = "";
+    hasSavedSessionRef.current = false;
+    savedPostIdRef.current = null;
+  }, [stories, dispatch]);
+
+  useEffect(() => {
+    const autoSaveStory = async () => {
+      if (!isLogin || !selectedStory) return;
+      if (selectedStory.content === lastSavedContentRef.current) return;
+      if (hasSavedSessionRef.current) return;
+      if (isSavingRef.current) return;
+      isSavingRef.current = true;
+      const post: IPost = { ...selectedStory, topic: selectTopics, isPublished: false };
+      try {
+        const result = await createPost(post).unwrap();
+        if (result && result.data && result.data._id) savedPostIdRef.current = result.data._id;
+
+    return () => {
+      player?.stop();
+    };
+  }, [location.pathname]);
+
+  useEffect(() => {
+    setNarrationWordIndex(0);
+    setNarrationState("idle");
+  }, [selectedStory?.uuid]);
+
+  const sentenceSegments = useMemo(() => {
+    return buildSentenceSegments(selectedStory?.content ?? "");
+  }, [selectedStory?.content]);
+
+  // Sync state instantly whenever a new template is submitted or selected
+  useEffect(() => {
+    if (stories && stories.length > 0) {
+      setSelectedStory(stories[0]);
+    } else {
+      setSelectedStory(null);
+    }
+    // Reset auto-save status for new story session
+    lastSavedContentRef.current = "";
+    hasSavedSessionRef.current = false;
+    savedPostIdRef.current = null;
+  }, [stories]);
+
+  useEffect(() => {
+    const autoSaveStory = async () => {
+      // 1. Prevent guest auto-save requests
+      if (!isLogin || !selectedStory) return;
+
+      // 2. Prevent duplicate auto-save requests for unchanged story content
+      if (selectedStory.content === lastSavedContentRef.current) {
+        return;
+      }
+
+      // 3. Only one draft/post is created per story session (prevent variation/topic duplicates)
+      if (hasSavedSessionRef.current) {
+        return;
+      }
+
+      // 4. Prevent duplicate network calls while a save is already running
+      if (isSavingRef.current) return;
+
+      isSavingRef.current = true;
+
+      const post: IPost = {
+        ...selectedStory,
+        topic: selectTopics,
+      };
+
+      try {
+        const result = await createPost(post).unwrap();
+        if (result && result.data && result.data._id) {
+          savedPostIdRef.current = result.data._id;
+        }
+
+        lastSavedContentRef.current = selectedStory.content;
+        hasSavedSessionRef.current = true;
+        toast.success("Story auto-saved!");
+      } catch (error) {
+        console.error("Auto-save failed", error);
+      } finally {
+        isSavingRef.current = false;
+      }
+    };
+
+    const timer = setTimeout(() => { autoSaveStory(); }, 1000);
+    return () => clearTimeout(timer);
+  }, [selectedStory, selectedStory?.content, isLogin, selectTopics, createPost]);
+
+  const handelStorySelection = (story: IStories) => { setSelectedStory(story); };
+
+
+    // Debounce to prevent multiple immediate renders/rerenders from triggering save
+    const timer = setTimeout(() => {
+      autoSaveStory();
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [selectedStory, selectedStory?.content, isLogin, selectTopics, createPost]);
+
+  const handelStorySelection = (story: IStories) => {
+    setSelectedStory(story);
+  };
+
+
   const handleTopicClick = (index: number) => {
     setTopics((currentTopics) =>
       currentTopics.map((topic, topicIndex) =>
@@ -526,6 +762,12 @@ const StoriesViewComponent: React.FC<StoriesComponentProps> = ({
   };
 
   const handleRemoveTopic = (index: number) => {
+
+    if (topics.length <= 2) { toast.error("At least 2 topics are required."); return; }
+    setTopics((currentTopics) => currentTopics.filter((_, topicIndex) => topicIndex !== index));
+  };
+
+
     if (topics.length <= 2) {
       toast.error("At least 2 topics are required.");
       return;
@@ -622,9 +864,68 @@ const StoriesViewComponent: React.FC<StoriesComponentProps> = ({
         const logoWidth = (logoImg.width / logoImg.height) * logoHeight;
         doc.addImage(logoImg, "PNG", leftMargin, yCursor, logoWidth, logoHeight);
       } else {
+
+        doc.setFont("helvetica", "bold"); doc.setFontSize(14); doc.setTextColor(99, 102, 241);
+        doc.text("StorySparkAI", leftMargin, yCursor + 6);
+      }
+      doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(148, 163, 184);
+      doc.text("PREMIUM AI GENERATED STORY", 190, yCursor + 5, { align: "right" });
+      yCursor += 10;
+      doc.setDrawColor(99, 102, 241); doc.setLineWidth(0.5); doc.line(leftMargin, yCursor, 190, yCursor);
+      yCursor += 8;
+
+      doc.setFont("helvetica", "bold"); doc.setFontSize(22); doc.setTextColor(30, 41, 59);
+      const splitTitle = doc.splitTextToSize(title, printableWidth);
+      splitTitle.forEach((line: string) => { doc.text(line, leftMargin, yCursor); yCursor += 9; });
+      yCursor += 1;
+
+      doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(100, 116, 139);
+      const formattedDate = new Date().toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+      doc.text(`Generated on ${formattedDate}`, leftMargin, yCursor);
+      doc.setFont("helvetica", "bold"); doc.setFontSize(7.5);
+      const tagWidth = doc.getTextWidth(tag);
+      const chipWidth = tagWidth + 5, chipHeight = 5, chipX = 190 - chipWidth, chipY = yCursor - 3.8;
+      doc.setFillColor(99, 102, 241); doc.roundedRect(chipX, chipY, chipWidth, chipHeight, 1, 1, "F");
+      doc.setTextColor(255, 255, 255); doc.text(tag, chipX + 2.5, chipY + 3.5);
+      yCursor += 4.5;
+      doc.setDrawColor(226, 232, 240); doc.setLineWidth(0.2); doc.line(leftMargin, yCursor, 190, yCursor);
+      yCursor += 10;
+
+      const paragraphs = content.split(/\n+/);
+      doc.setFont("helvetica", "normal"); doc.setFontSize(11); doc.setTextColor(30, 41, 59);
+      paragraphs.forEach((para: string, pIdx: number) => {
+        const cleanPara = para.trim();
+        if (!cleanPara) return;
+        const lines = doc.splitTextToSize(cleanPara, printableWidth);
+        lines.forEach((line: string) => {
+          if (yCursor > maxY) { doc.addPage(); yCursor = 30; }
+          doc.setFont("helvetica", "normal"); doc.setFontSize(11); doc.setTextColor(30, 41, 59);
+          doc.text(line, leftMargin, yCursor); yCursor += 6.5;
+        });
+        if (pIdx < paragraphs.length - 1) yCursor += 4.5;
+      });
+
+      const totalPages = doc.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setDrawColor(241, 245, 249); doc.setLineWidth(0.25); doc.line(leftMargin, 280, 190, 280);
+        doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(100, 116, 139);
+        doc.text("Generated with StorySparkAI", leftMargin, 285);
+        doc.text(`Page ${i} of ${totalPages}`, 190, 285, { align: "right" });
+        if (i > 1) {
+          doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.setTextColor(99, 102, 241);
+          doc.text("StorySparkAI", leftMargin, 14);
+          doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(148, 163, 184);
+          const headerTitle = title.length > 50 ? title.substring(0, 50) + "..." : title;
+          doc.text(headerTitle, 190, 14, { align: "right" });
+          doc.setDrawColor(241, 245, 249); doc.setLineWidth(0.2); doc.line(leftMargin, 17, 190, 17);
+        }
+      }
+
+
         doc.setFont("helvetica", "bold");
         doc.setFontSize(14);
-        doc.setTextColor(99, 102, 241);
+        doc.setTextColor(99, 102, 241); // Brand Indigo
         doc.text("StorySparkAI", leftMargin, yCursor + 6);
       }
 
@@ -757,21 +1058,27 @@ const StoriesViewComponent: React.FC<StoriesComponentProps> = ({
       toast.dismiss(toastId);
       toast.success("Premium PDF downloaded!");
     } catch (error) {
-      console.error(error);
-      toast.dismiss(toastId);
-      toast.error("Failed to export PDF.");
+
+      console.error(error); toast.dismiss(toastId); toast.error("Failed to export PDF.");
     }
   };
 
   const handleExportMarkdown = () => {
-    if (!selectedStory) {
-      toast.error("No story available to export.");
-      return;
+    if (!selectedStory) { toast.error("No story available to export."); return; }
+
+      console.error(error);
+      toast.dismiss(toastId);
+      toast.error("Failed to export PDF.");
     }
+
     if (!selectedStory.content?.trim()) {
       toast.error("Story content is empty. Cannot export.");
       return;
     }
+
+const handleExportMarkdown = () => {
+    if (!selectedStory) { toast.error("No story available to export."); return; }
+    if (!selectedStory.content?.trim()) {toast.error("Story content is empty. Cannot export.");return;}
 
     try {
       const title = selectedStory.title || "Story";
@@ -1006,6 +1313,55 @@ const StoriesViewComponent: React.FC<StoriesComponentProps> = ({
                 <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm italic break-words whitespace-pre-wrap m-0 leading-relaxed font-medium">
                   {selectedStory.enhancedPrompt}
                 </p>
+              </div>
+            )}
+
+            <div id="story-content" className="prose prose-invert max-w-none text-slate-300 leading-relaxed tracking-wide relative z-10">
+              <p className="break-words whitespace-pre-wrap">
+                {sentenceSegments.length > 0 ? (
+                  sentenceSegments.map((segment: StorySentenceSegment) => {
+                    const isActiveSentence =
+                      isNarrationActive &&
+                      narrationWordIndex >= segment.startWordIndex &&
+                      narrationWordIndex <= segment.endWordIndex;
+
+                    return (
+                      <span
+                        key={segment.id}
+                        className={
+                          isActiveSentence
+                            ? "rounded-md bg-indigo-500/20 px-0.5 py-0.5 text-indigo-100 ring-1 ring-indigo-400/30"
+                            : undefined
+                        }
+                      >
+                        {segment.text}
+                      </span>
+                    );
+                  })
+                ) : (
+                  selectedStory.content
+                )}
+              </p>
+            </div>
+
+            <div className="relative z-10 mt-6">
+              <AudioPlayer
+                ref={audioPlayerRef}
+                text={selectedStory.content}
+                title={selectedStory.title}
+                onWordIndexChange={setNarrationWordIndex}
+                onPlaybackStateChange={setNarrationState}
+              />
+
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent opacity-60 pointer-events-none"></div>
+            </div>
+
+            {selectedStory.enhancedPrompt && (
+              <div className="mb-6 p-4 bg-blue-500/5 border border-blue-500/10 rounded-xl">
+                <h4 className="text-xs font-bold text-blue-600 dark:text-blue-400 mb-2 uppercase tracking-wider flex items-center gap-2 select-none">
+                  <i className="fas fa-wand-magic-sparkles"></i> AI Enhanced Prompt
+                </h4>
+                <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm italic break-words whitespace-pre-wrap m-0 leading-relaxed font-medium">{selectedStory.enhancedPrompt}</p>
               </div>
             )}
 
@@ -1251,7 +1607,265 @@ const StoriesViewComponent: React.FC<StoriesComponentProps> = ({
                       ⏱️ {calculateReadingTime(selectedStory.content)} Min Read
                     </div>
                   </div>
-                  <div className="shrink-0">
+                  <div className="shrink-0"><BookmarkButton storyId={selectedStory.uuid} /></div>
+                </div>
+                <h3 className="mb-2 text-slate-900 dark:text-slate-200 text-lg sm:text-xl font-extrabold tracking-tight leading-snug">{selectedStory.title}</h3>
+                <p className="text-slate-500 dark:text-slate-400 font-medium break-words text-xs sm:text-sm leading-relaxed m-0">{getShortenedText(selectedStory.content)}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {showRemix && selectedStory && (
+        <StoryRemix
+          story={selectedStory}
+          isLogin={isLogin}
+          onRemixComplete={(remixedStory) => { setStories([remixedStory, ...stories]); setSelectedStory(remixedStory); setShowRemix(false); }}
+          onClose={() => setShowRemix(false)}
+        />
+
+          </div>
+
+        ))
+      ) : (
+        <p className="text-center text-slate-500 col-span-2 py-8">No related stories found.</p>
+
+
+          <div className="mt-7">
+            <div className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-xl p-6 mb-8">
+              <h3 className="text-lg font-bold text-slate-200 mb-4">
+                Select Topics
+              </h3>
+              <div className="flex flex-col sm:flex-row gap-3 mb-4">
+                <input
+                  type="text"
+                  value={newTopicTitle}
+                  onChange={(event) => setNewTopicTitle(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      handleAddTopic();
+                    }
+                  }}
+                  placeholder="Add related topic"
+                  className="flex-1 rounded-lg border border-slate-600 bg-slate-900/70 px-4 py-2 text-sm text-slate-200 placeholder:text-slate-500 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/30"
+                />
+                <button
+                  type="button"
+                  className="rounded-lg px-4 py-2 bg-blue-600 text-white font-semibold cursor-pointer hover:bg-blue-500 transition-colors"
+                  onClick={handleAddTopic}
+                >
+                  Add Topic
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {selectedStory ? (
+                  <>
+                    {topics.map((topic, index) => (
+                      <span
+                        key={index}
+                        className={`inline-flex items-center gap-2 px-4 py-1.5 ${topic.className} rounded-full text-sm font-medium transition-transform hover:scale-105 shadow-sm`}
+                      >
+                        <button
+                          type="button"
+                          className="cursor-pointer"
+                          onClick={() => handleTopicClick(index)}
+                        >
+                          {topic.selected ? (
+                            <i className="fa-solid fa-check"></i>
+                          ) : (
+                            <i className="fa-solid fa-plus"></i>
+                          )}{" "}
+                          {topic.title}
+                        </button>
+                        <button
+                          type="button"
+                          className="cursor-pointer border-l border-current/30 pl-2 disabled:cursor-not-allowed disabled:opacity-40"
+                          onClick={() => handleRemoveTopic(index)}
+                          disabled={topics.length <= 2}
+                          aria-label={`Remove ${topic.title}`}
+                        >
+                          <i className="fa-solid fa-xmark"></i>
+                        </button>
+                      </span>
+                    ))}
+                  </>
+                ) : (
+                  <p className="text-gray-400">
+                    No topics available. Please generate a story first.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Alternate Endings Section */}
+            {selectedStory && (
+              <div className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-xl p-6 mt-8 relative overflow-hidden">
+                <div className="absolute top-[-50px] right-[-50px] w-48 h-48 bg-purple-500/5 rounded-full blur-3xl pointer-events-none"></div>
+                
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-200 flex items-center gap-2">
+                      Alternate Endings
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Explore alternate narrative styles for your story context.
+                    </p>
+                  </div>
+                  {selectedStory.content !== originalStoryContent[selectedStory.uuid] && (
+                    <button
+                      type="button"
+                      onClick={handleResetEnding}
+                      className="rounded-lg px-4 py-2 bg-red-950/40 hover:bg-red-900/60 text-red-200 border border-red-700/50 font-semibold text-sm transition-all active:scale-95 cursor-pointer flex items-center gap-1.5"
+                    >
+                      <i className="fa-solid fa-rotate-left"></i> Reset to Original
+                    </button>
+                  )}
+                </div>
+
+                {isGeneratingEndings ? (
+                  <div className="flex flex-col items-center justify-center py-10">
+                    <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-purple-500 mb-4"></div>
+                    <p className="text-slate-300 text-sm font-medium animate-pulse">
+                      Generating alternate endings...
+                    </p>
+                  </div>
+                ) : endingsCache[selectedStory.uuid]?.length > 0 ? (
+                  <div>
+                    {/* Tabs */}
+                    <div className="flex border-b border-slate-700/50 mb-6 overflow-x-auto whitespace-nowrap scrollbar-none">
+                      {[
+                        { name: "Happy Ending" },
+                        { name: "Dark Ending" },
+                        { name: "Plot Twist Ending" },
+                        { name: "Open Ending" },
+                        { name: "Cliffhanger Ending" }
+                      ].map((s) => {
+                        const hasEndings = endingsCache[selectedStory.uuid] || [];
+                        const endingData = hasEndings.find((e) => e.style === s.name);
+                        const isApplied = endingData && selectedStory.content === endingData.fullStory;
+                        
+                        return (
+                          <button
+                            key={s.name}
+                            type="button"
+                            onClick={() => setActiveEndingTab(s.name)}
+                            className={`px-5 py-3 font-semibold text-sm flex items-center gap-2 border-b-2 transition-all cursor-pointer ${
+                              activeEndingTab === s.name
+                                ? "border-purple-500 text-purple-400 bg-purple-500/5"
+                                : "border-transparent text-slate-400 hover:text-slate-300 hover:border-slate-700"
+                            }`}
+                          >
+                            <span>{s.name}</span>
+                            {isApplied && (
+                              <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block animate-ping"></span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Tab content */}
+                    {(() => {
+                      const currentEndings = endingsCache[selectedStory.uuid] || [];
+                      const currentEndingData = currentEndings.find((e) => e.style === activeEndingTab);
+                      if (!currentEndingData) return null;
+                      
+                      const isCurrentlyApplied = selectedStory.content === currentEndingData.fullStory;
+                      
+                      return (
+                        <div className="bg-slate-900/40 rounded-xl p-6 border border-slate-700/30">
+                          <div className="flex justify-between items-center mb-4">
+                            <h4 className="text-lg font-bold text-slate-200">
+                              {activeEndingTab} Suggestion
+                            </h4>
+                            <div>
+                              {isCurrentlyApplied ? (
+                                <span className="text-xs text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-3 py-1.5 rounded-full font-semibold flex items-center gap-1.5">
+                                  <i className="fa-solid fa-check"></i> Applied to Story
+                                </span>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => handleApplyEnding(currentEndingData)}
+                                  className="rounded-lg px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white font-bold text-sm transition-all hover:scale-105 active:scale-95 cursor-pointer shadow-md hover:shadow-purple-500/20"
+                                >
+                                  Apply to Story
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-4">
+                            <div className="bg-slate-950/60 p-5 rounded-xl border border-slate-800 leading-relaxed text-slate-300 text-sm md:text-base italic shadow-inner whitespace-pre-wrap">
+                              <p>{currentEndingData.ending}</p>
+                            </div>
+                            
+                            <div>
+                              <details className="group border border-slate-800 rounded-lg overflow-hidden bg-slate-950/20">
+                                <summary className="list-none flex items-center justify-between p-3 text-xs font-bold text-slate-400 hover:text-slate-200 cursor-pointer select-none">
+                                  <span>PREVIEW FULL STORY WITH THIS ENDING</span>
+                                  <span className="transition-transform duration-200 group-open:rotate-180">▼</span>
+                                </summary>
+                                <div className="p-4 border-t border-slate-800/80 text-xs text-slate-400 leading-relaxed max-h-56 overflow-y-auto whitespace-pre-wrap">
+                                  {currentEndingData.fullStory}
+                                </div>
+                              </details>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-8 bg-slate-900/20 border border-dashed border-slate-700/40 rounded-xl">
+                    <button
+                      type="button"
+                      onClick={handleGenerateAlternateEndings}
+                      className="rounded-xl px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-600 hover:to-indigo-600 text-white font-bold transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-purple-500/30 flex items-center gap-2 cursor-pointer"
+                    >
+                      Generate Alternate Endings
+                    </button>
+                    <p className="text-xs text-slate-400 mt-3 text-center max-w-sm px-4 leading-relaxed">
+                      Uses the story context to produce 5 unique ending variations (Happy, Dark, Plot Twist, Open, Cliffhanger) for comparison.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="col-span-1 lg:col-span-4">
+          <div className="mb-5">
+            <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-300 to-blue-400">
+              Preview
+            </h1>
+          </div>
+          <div className="bg-slate-800/60 backdrop-blur-xl border border-slate-700/50 rounded-2xl shadow-2xl overflow-hidden group">
+            <div className="relative flex flex-col rounded-lg">
+              <div className="relative m-3 overflow-hidden text-white rounded-xl">
+                <ImageFallback
+                  src={selectedStory.imageURL}
+                  alt="card-image"
+                  className="w-full h-48 object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+              </div>
+              <div className="px-3 py-1">
+                <div className="flex justify-between items-center mb-2 w-full">
+                  <div className="flex items-center gap-2">
+                    <div className="inline-flex items-center rounded-full bg-purple-600 py-1 px-3 text-xs font-semibold text-white shadow-sm">
+                      {selectedStory.tag.toUpperCase()}
+                    </div>
+                    <div className="inline-flex items-center rounded-full bg-indigo-600 py-1 px-3 text-xs font-semibold text-white shadow-sm">
+                      ≡ƒîÉ {(selectedStory.language || "English").toUpperCase()}
+                    </div>
+                    <div className="inline-flex items-center rounded-full bg-slate-700 py-1 px-2.5 text-xs font-medium text-slate-300 shadow-sm gap-1">
+                      ≡ƒôû {formatReadingStats(selectedStory.content)}
+                    </div>
+                  </div>
+                  <div>
                     <BookmarkButton storyId={selectedStory.uuid} />
                   </div>
                 </div>
@@ -1310,4 +1924,12 @@ const StoriesViewComponent: React.FC<StoriesComponentProps> = ({
   );
 };
 
+
+
 export default StoriesViewComponent;
+
+export default RelatedStoriesComponent;
+
+
+export default StoriesViewComponent;
+

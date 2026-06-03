@@ -90,7 +90,8 @@ const RecommendedWritersComponent = () => {
               <button
                 onClick={() => toggleFollow(index, writer.id)}
                 disabled={isLoading}
-                className="!rounded-button shrink-0 text-indigo-600 text-sm font-medium hover:text-indigo-700 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                aria-label={following.includes(index) ? `Unfollow ${writer.name}` : `Follow ${writer.name}`}
+                className="!rounded-button text-indigo-600 text-sm font-medium hover:text-indigo-700 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {following.includes(index) ? "Following" : "Follow"}
               </button>

@@ -1,6 +1,7 @@
 import React from "react";
 
 import { createBrowserRouter, Navigate, Outlet, RouterProvider } from "react-router-dom";
+
 import { USER_ROLE } from "./constants/role";
 import { getUserInfo } from "./services/auth.service";
 
@@ -10,7 +11,6 @@ import DashboardLayout from "./components/dashboard/dashboard_layout.component";
 import AboutUsComponent from "./components/footer/about-us.tsx";
 import AnalyticsPage from "./components/dashboard/analytics/analytics.page";
 import BlogComponent from "./components/footer/blog.tsx";
-import BlogPostComponent from "./components/footer/blog-post.tsx";
 import BookmarksComponent from "./components/post/bookmarks.component";
 import BranchingStory from "./components/stories/BranchingStory";
 import CareerComponent from "./components/footer/career.tsx";
@@ -80,14 +80,14 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: (
-      <div className="w-full box-border relative">
+      <>
         <ScrollToTopButton />
         <MagicCursorComponent />
         <ScrollToTop />
         <RootLayout>
           <Outlet />
         </RootLayout>
-      </div>
+      </>
     ),
     children: [
       { index: true, element: <><HeroSectionComponent /><HomeComponent /></> },
@@ -103,7 +103,6 @@ const router = createBrowserRouter([
       { path: "about-us", element: <AboutUsComponent /> },
       { path: "career", element: <CareerComponent /> },
       { path: "blog", element: <BlogComponent /> },
-      { path: "blog/:id", element: <BlogPostComponent /> },
       { path: "privacy-policy", element: <PrivacyPolicy /> },
       { path: "cookie-policy", element: <CookiePolicy /> },
       { path: "terms", element: <Terms /> },
@@ -201,16 +200,7 @@ const router = createBrowserRouter([
       },
     ],
   },
-], {
-  future: {
-    v7_startTransition: true,
-    v7_relativeSplatPath: true,
-    v7_fetcherPersist: true,
-    v7_normalizeFormMethod: true,
-    v7_partialHydration: true,
-    v7_skipActionErrorRevalidation: true,
-  }
-});
+]);
 
 function App() {
   return <RouterProvider router={router} />;

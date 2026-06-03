@@ -21,7 +21,8 @@ export default function CollabHome() {
 
     try {
       setIsCreating(true);
-      const socket = connectSocket();
+      connectSocket();
+      const socket = getSocketIo();
       if (!socket) {
         setError(
           "Socket.IO connection failed. Please check VITE_SOCKET_URL in frontend/.env"
@@ -30,13 +31,7 @@ export default function CollabHome() {
         return;
       }
 
-      const socketUrl = import.meta.env.VITE_SOCKET_URL || "http://localhost:5000";
-      const collabSocket = io(`${socketUrl}/collab`, {
-        transports: ["websocket"],
-        auth: {
-          token: localStorage.getItem("AUTH_KEY") 
-        }
-      });
+      const collabSocket = socket.io.of("/collab");
 
       collabSocket.emit(
         "collab:create_room",
