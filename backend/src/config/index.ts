@@ -13,6 +13,16 @@ const parseCorsOrigins = (
     .filter(Boolean);
 };
 
+const requiredEnv = (key: string): string => {
+  const value = process.env[key]?.trim();
+  if (!value) {
+    throw new Error(
+      `${key} environment variable is required. See backend/.env.example for setup instructions.`
+    );
+  }
+  return value;
+};
+
 export default {
   env: process.env.NODE_ENV,
   port: process.env.PORT || "5000",
@@ -33,26 +43,10 @@ export default {
     return Number.isInteger(parsed) && parsed > 0 ? parsed : 10;
   })(),
   jwt: {
-    secret: (() => {
-      const secret = process.env.JWT_SECRET?.trim();
-      if (!secret) {
-        throw new Error(
-          "JWT_SECRET environment variable is required. Please define it in your .env file."
-        );
-      }
-      return secret;
-    })(),
-    refresh_secret: (() => {
-      const secret = process.env.JWT_REFRESH_SECRET?.trim();
-      if (!secret) {
-        throw new Error(
-          "JWT_REFRESH_SECRET environment variable is required. Please define it in your .env file."
-        );
-      }
-      return secret;
-    })(),
-    expires_in: process.env.JWT_EXPIRES_IN || "1d",
-    refresh_expires_in: process.env.JWT_REFRESH_EXPIRES_IN || "30d",
+    secret: requiredEnv("JWT_SECRET"),
+    refresh_secret: requiredEnv("JWT_REFRESH_SECRET"),
+    expires_in: process.env.JWT_EXPIRES_IN,
+    refresh_expires_in: process.env.JWT_REFRESH_EXPIRES_IN,
   },
   default_admin_password: process.env.DEFAULT_ADMIN_PASSWORD,
   openai_key: process.env.OPEN_AI_KEY,
