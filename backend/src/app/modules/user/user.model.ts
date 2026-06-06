@@ -85,9 +85,9 @@ export const UserSchema: Schema<IUser> = new Schema<IUser, UserModel>(
     },
     readingHistory: [{ type: Schema.Types.ObjectId, ref: "Post" }],
     writingGoals: {
-    dailyWordCount: { type: Number, default: 0 },
-    weeklyWordCount: { type: Number, default: 0 },
-  },
+      dailyWordCount: { type: Number, default: 0 },
+      weeklyWordCount: { type: Number, default: 0 },
+   },
   },
   {
     timestamps: true,
