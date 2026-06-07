@@ -19,6 +19,7 @@ const MAX_SEARCH_TERM_LENGTH = 100;
 const escapeRegex = (text: string): string => {
   return text.replace(/[-[\]{}()*+?.,\^$|#\s]/g, "\$&");
 };
+// const MAX_SEARCH_TERM_LENGTH = 100;
 
 interface ICursorPayload {
   value: string;
@@ -422,6 +423,8 @@ if (!postExists) {
       bookmarked: false,
     };
   }
+};}
+
 
   await Post.updateOne(
     { _id: postId },
@@ -579,6 +582,7 @@ const getGenres = async (): Promise<string[]> => {
   return genres.sort();
 };
 
+
 export const PostService = {
   createPost,
   getPosts,
@@ -595,3 +599,4 @@ export const PostService = {
   translateStory,
   getGenres,
 };
+
