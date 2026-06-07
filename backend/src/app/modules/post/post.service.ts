@@ -109,14 +109,18 @@ const createPost = async (payload: IPostPayload, token: ITokenPayload) => {
       author: user._id,
       updatedBy: user._id,
     });
-      if (res && res.isPublished) {
-        user.postsCount += 1;
-        await user.save();
-        GamificationService.addXp(String(user._id), 50, "CREATED_POST").catch(console.error);
-        if (user.postsCount === 1) {
-          GamificationService.awardBadge(String(user._id), "First Story").catch(console.error);
-        }
+
+    if (res && res.isPublished) {
+      const updatedUser = await User.findByIdAndUpdate(
+        user._id,
+        { $inc: { postsCount: 1 } },
+        { new: true }
+      );
+      GamificationService.addXp(String(user._id), 50, "CREATED_POST").catch(console.error);
+      if (updatedUser && updatedUser.postsCount === 1) {
+        GamificationService.awardBadge(String(user._id), "First Story").catch(console.error);
       }
+    }
     return res;
   } catch (error) {
     throw new ApiError(
@@ -401,11 +405,11 @@ const toggleBookmark = async (postId: string, token: ITokenPayload) => {
     throw new ApiError(httpStatus.BAD_REQUEST, "User not found!");
   }
 
-const postExists = await Post.exists({ _id: postId, isDeleted: { $ne: true } });
-if (!postExists) {
-  throw new ApiError(httpStatus.BAD_REQUEST, "Post not found!");
-}
-  // Check bookmark status atomically
+  const postExists = await Post.exists({ _id: postId, isDeleted: { $ne: true } });
+  if (!postExists) {
+    throw new ApiError(httpStatus.BAD_REQUEST, "Post not found!");
+  }
+
   const isBookmarked = await Post.exists({
     _id: postId,
     bookmarks: user._id,
@@ -506,9 +510,11 @@ const deletePost = async (postId: string, token: ITokenPayload) => {
   post.deletedBy = user._id;
   await post.save();
 
-  if (post.isPublished && user.postsCount > 0) {
-    user.postsCount -= 1;
-    await user.save();
+  if (post.isPublished) {
+    await User.findByIdAndUpdate(
+      user._id,
+      { $inc: { postsCount: -1 } }
+    );
   }
 
   await Bookmark.deleteMany({ storyId: postId });
@@ -538,8 +544,10 @@ const remixStory = async (postId: string, prompt: string, token: ITokenPayload) 
   });
 
   if (res) {
-    user.postsCount += 1;
-    await user.save();
+    await User.findByIdAndUpdate(
+      user._id,
+      { $inc: { postsCount: 1 } }
+    );
   }
 
   return res;
@@ -567,8 +575,10 @@ const translateStory = async (postId: string, language: string, token: ITokenPay
   });
 
   if (res) {
-    user.postsCount += 1;
-    await user.save();
+    await User.findByIdAndUpdate(
+      user._id,
+      { $inc: { postsCount: 1 } }
+    );
   }
 
   return res;
