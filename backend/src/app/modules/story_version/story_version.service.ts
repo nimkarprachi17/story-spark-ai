@@ -1,3 +1,4 @@
+import { contextCompressor } from "../../../utils/contextCompressor";
 import { enhancePromptWithGemini } from "./enhance_prompt.utils";
 import { raceGenerationWithTimeout, GenerationTimeoutError } from "../../../utils/generation_timeout";
 import ApiError from "../../../errors/api_error";
@@ -320,10 +321,22 @@ const restoreVersion = async (
 
 const ENHANCE_TIMEOUT_MS = 60000;
 
-const enhancePrompt = async (prompt: string): Promise<string> => {
+const enhancePrompt = async (
+  prompt: string,
+  storyContent?: string
+): Promise<string> => {
   try {
+    const compressed = storyContent
+      ? contextCompressor(storyContent)
+      : null;
+
     const enhanced = await raceGenerationWithTimeout(
-      (signal) => enhancePromptWithGemini(prompt, signal),
+      (signal) =>
+        enhancePromptWithGemini(
+          prompt,
+          signal,
+          compressed?.compressedText
+        ),
       ENHANCE_TIMEOUT_MS
     );
 
