@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import * as d3 from "d3";
 import { parseStory, IStoryNode } from "../../utils/storyParser";
 
@@ -19,6 +19,9 @@ interface SimLink extends d3.SimulationLinkDatum<SimNode> {
   source: SimNode | string;
   target: SimNode | string;
 }
+
+const getNodePosition = (node: string | number | SimNode, axis: "x" | "y") =>
+  typeof node === "object" ? node[axis] ?? 0 : 0;
 
 export default function StoryWorldMap({ story, title, onClose }: Props) {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -64,19 +67,20 @@ export default function StoryWorldMap({ story, title, onClose }: Props) {
       });
     svg.call(zoom);
 
-    const simNodes: SimNode[] = nodes.map(n => ({ ...n }));
-    const simLinks: SimLink[] = links.map(l => ({ ...l }));
+    const simNodes: SimNode[] = nodes.map((node) => ({ ...node }));
+    const simLinks: SimLink[] = links.map((link) => ({ ...link }));
 
     const simulation = d3.forceSimulation<SimNode>(simNodes)
       .force("link", d3.forceLink<SimNode, SimLink>(simLinks)
         .id((d: SimNode) => d.id)
+        .id((node: SimNode) => node.id)
         .distance(120))
       .force("charge", d3.forceManyBody().strength(-400))
       .force("center", d3.forceCenter(width / 2, height / 2))
       .force("collision", d3.forceCollide(50));
 
     const link = container.append("g")
-      .selectAll("line")
+      .selectAll<SVGLineElement, SimLink>("line")
       .data(simLinks)
       .join("line")
       .attr("stroke", "rgba(99,102,241,0.4)")
@@ -90,16 +94,19 @@ export default function StoryWorldMap({ story, title, onClose }: Props) {
       .style("cursor", "pointer")
       .call(
         d3.drag<SVGGElement, SimNode>()
-          .on("start", (event: d3.D3DragEvent<SVGGElement, SimNode, SimNode>, d: SimNode) => {
+          .on("start", (event: d3.D3DragEvent<SVGGElement, SimNode, SimNode>, node: SimNode) => {
             if (!event.active) simulation.alphaTarget(0.3).restart();
-            d.fx = d.x; d.fy = d.y;
+            node.fx = node.x;
+            node.fy = node.y;
           })
-          .on("drag", (event: d3.D3DragEvent<SVGGElement, SimNode, SimNode>, d: SimNode) => {
-            d.fx = event.x; d.fy = event.y;
+          .on("drag", (event: d3.D3DragEvent<SVGGElement, SimNode, SimNode>, node: SimNode) => {
+            node.fx = event.x;
+            node.fy = event.y;
           })
-          .on("end", (event: d3.D3DragEvent<SVGGElement, SimNode, SimNode>, d: SimNode) => {
+          .on("end", (event: d3.D3DragEvent<SVGGElement, SimNode, SimNode>, node: SimNode) => {
             if (!event.active) simulation.alphaTarget(0);
-            d.fx = null; d.fy = null;
+            node.fx = null;
+            node.fy = null;
           })
       );
 
@@ -109,13 +116,18 @@ export default function StoryWorldMap({ story, title, onClose }: Props) {
         ? "rgba(99,102,241,0.2)"
         : "rgba(236,72,153,0.2)")
       .attr("stroke", (d: SimNode) => d.type === "location" ? "#6366f1" : "#ec4899")
+      .attr("r", (node: SimNode) => node.type === "location" ? 28 : 20)
+      .attr("fill", (node: SimNode) => node.type === "location"
+        ? "rgba(99,102,241,0.2)"
+        : "rgba(236,72,153,0.2)")
+      .attr("stroke", (node: SimNode) => node.type === "location" ? "#6366f1" : "#ec4899")
       .attr("stroke-width", 2);
 
     node.append("text")
       .attr("text-anchor", "middle")
       .attr("dominant-baseline", "central")
       .attr("font-size", (d: SimNode) => d.type === "location" ? "18px" : "14px")
-      .text((d: SimNode) => d.type === "location" ? "≡ƒôì" : "≡ƒæñ");
+      .text((d: SimNode) => d.type === "location" ? "📍" : "👤");
 
     node.append("text")
       .attr("text-anchor", "middle")
@@ -132,9 +144,29 @@ export default function StoryWorldMap({ story, title, onClose }: Props) {
         .attr("x2", (d: SimLink) => (typeof d.target === "string" ? 0 : d.target.x ?? 0))
         .attr("y2", (d: SimLink) => (typeof d.target === "string" ? 0 : d.target.y ?? 0));
       node.attr("transform", (d: SimNode) => `translate(${d.x || 0},${d.y || 0})`);
+      .attr("font-size", (node: SimNode) => node.type === "location" ? "18px" : "14px")
+      .text((node: SimNode) => node.type === "location" ? "Pin" : "User");
+
+    node.append("text")
+      .attr("text-anchor", "middle")
+      .attr("y", (node: SimNode) => node.type === "location" ? 40 : 32)
+      .attr("fill", (node: SimNode) => node.type === "location" ? "#a5b4fc" : "#f9a8d4")
+      .attr("font-size", "11px")
+      .attr("font-weight", "600")
+      .text((node: SimNode) => node.name);
+
+    simulation.on("tick", () => {
+      link
+        .attr("x1", (link: SimLink) => getNodePosition(link.source, "x"))
+        .attr("y1", (link: SimLink) => getNodePosition(link.source, "y"))
+        .attr("x2", (link: SimLink) => getNodePosition(link.target, "x"))
+        .attr("y2", (link: SimLink) => getNodePosition(link.target, "y"));
+      node.attr("transform", (node: SimNode) => `translate(${node.x ?? 0},${node.y ?? 0})`);
     });
 
-    return () => { simulation.stop(); };
+    return () => {
+      simulation.stop();
+    };
   }, [story]);
 
   return (
@@ -142,7 +174,7 @@ export default function StoryWorldMap({ story, title, onClose }: Props) {
       <div className="w-full max-w-5xl bg-[#0d0d14] rounded-2xl border border-white/10 overflow-hidden shadow-2xl">
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
           <div>
-            <h2 className="text-xl font-bold text-indigo-400">≡ƒù║∩╕Å Story World Map</h2>
+            <h2 className="text-xl font-bold text-indigo-400">Story World Map</h2>
             <p className="text-xs text-white/40 mt-0.5">{title}</p>
           </div>
           <div className="flex items-center gap-4">
@@ -156,14 +188,14 @@ export default function StoryWorldMap({ story, title, onClose }: Props) {
                 Characters
               </span>
             </div>
-            <button onClick={onClose} className="text-white/40 hover:text-white transition text-xl">Γ£ò</button>
+            <button onClick={onClose} className="text-white/40 hover:text-white transition text-xl">Close</button>
           </div>
         </div>
         <div style={{ height: "500px" }}>
           <svg ref={svgRef} width="100%" height="500" />
         </div>
         <div className="border-t border-white/10 px-6 py-3">
-          <p className="text-xs text-white/30">Drag to rearrange ┬╖ Scroll to zoom ┬╖ Click to explore</p>
+          <p className="text-xs text-white/30">Drag to rearrange. Scroll to zoom. Click to explore.</p>
         </div>
       </div>
     </div>
