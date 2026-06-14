@@ -25,6 +25,7 @@ from model import build_model, SEQ_LEN, N_FEATURES
 MODEL_PATH     = "saved/model.keras"
 SCALER_PATH    = "saved/scaler.pkl"
 THRESHOLD_PATH = "saved/threshold.json"
+EVALUATION_REPORT_PATH = "saved/evaluation_report.json"
 TUNER_DIR      = "my_tuner"
 
 os.makedirs("saved", exist_ok=True)
@@ -245,6 +246,27 @@ def train():
     print(f"  Stuck   err  mean={np.mean(err_stuck):.4f}  "
           f"max={np.max(err_stuck):.4f}")
     print(f"  Threshold  = {threshold:.4f}")
+
+    # Save evaluation report
+    evaluation_report = {
+        "threshold": threshold,
+        "false_positive_rate": fp_pct/100,
+        "detection_rate": tp_pct/100,
+
+        "normal_error_mean": float(np.mean(err_val)),
+        "normal_error_max": float(np.max(err_val)),
+
+        "stuck_error_mean": float(np.mean(err_stuck)),
+        "stuck_error_max": float(np.max(err_stuck)),
+
+        "normal_samples": len(X_val),
+        "stuck_samples": len(stuck_raw),
+    }
+
+    with open(EVALUATION_REPORT_PATH, "w") as fh:
+        json.dump(evaluation_report, fh, indent=4)
+
+    print(f"  Evaluation report → {EVALUATION_REPORT_PATH}")
 
     if tp_pct < 50:
         print("\n  ⚠  Detection rate still low. Consider:")
