@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { isLoggedIn, removeUserInfo } from "../../services/auth.service";
 import ThemeToggle from "../theme/theme_toggle.component";
@@ -34,36 +34,7 @@ const NavListComponent = () => {
         ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white"
         : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10"
     }`;
-
-  return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-200/70 bg-white/90 backdrop-blur-md dark:border-white/10 dark:bg-[#0B1120]/80">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        <Link
-          to="/"
-          className="text-lg font-bold text-slate-800 dark:text-white"
-          onClick={(e) => {
-            if (window.location.pathname === "/") {
-              e.preventDefault();
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }
-          }}
-        >
-          Spark-Story-AI
-        </Link>
-
-        <nav className="hidden lg:flex items-center gap-2">
-          <NavLink to="/" end className={linkClass}>
-            Home
-          </NavLink>
-          <NavLink to="/explore" className={linkClass}>
-            Explore
-          </NavLink>
-          <NavLink to="/story-inspiration" className={linkClass}>
-            Stories
-          </NavLink>
-          <NavLink to="/community" className={linkClass}>
-            Community
-          </NavLink>
+  
   const navItems = [
     { to: "/", label: "Home" },
     { to: "/explore", label: "Explore" },
@@ -85,43 +56,7 @@ const NavListComponent = () => {
       transition: { delay: i * 0.05 },
     }),
   };
-
-  const mobileLinkClass = ({ isActive }: { isActive: boolean }) =>
-    `block rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 ${
-      isActive
-        ? "bg-slate-100 dark:bg-white/10 text-slate-900 dark:text-white"
-        : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10"
-    }`;
-
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-slate-200/70 bg-white/90 backdrop-blur-md dark:border-white/10 dark:bg-[#0B1120]/80">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        <Link
-          to="/"
-          className="text-lg font-bold text-slate-800 dark:text-white"
-          onClick={(e) => {
-            if (window.location.pathname === "/") {
-              e.preventDefault();
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }
-          }}
-        >
-          Spark-Story-AI
-        </Link>
-
-        <nav className="hidden lg:flex items-center gap-2">
-          <NavLink to="/" end className={linkClass}>
-            Home
-          </NavLink>
-          <NavLink to="/explore" className={linkClass}>
-            Explore
-          </NavLink>
-          <NavLink to="/story-inspiration" className={linkClass}>
-            Stories
-          </NavLink>
-          <NavLink to="/community" className={linkClass}>
-            Community
-          </NavLink>
     <header className="sticky top-0 z-50 w-full">
       <div className="absolute inset-0 border-b border-white/50 bg-white/70 shadow-sm shadow-slate-900/5 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/70 dark:shadow-black/20" />
       <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-indigo-500/35 to-transparent" />
@@ -229,7 +164,6 @@ const NavListComponent = () => {
 
         <div className="flex items-center gap-3">
           <ThemeToggle />
-
           {loggedIn ? (
             <button
               type="button"
@@ -239,12 +173,7 @@ const NavListComponent = () => {
               Logout
             </button>
           ) : (
-            <Link
-              to="/login"
-              className="rounded-md px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200"
-            >
-              Login
-            </Link>
+            <Link to="/login" className="rounded-md px-3 py-2 text-sm font-semibold text-slate-700 dark:text-slate-200">Login</Link>
           )}
 
           <button
