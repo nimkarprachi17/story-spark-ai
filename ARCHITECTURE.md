@@ -247,6 +247,29 @@ The backend runs a Socket.IO server for real-time notifications (story generatio
 
 ---
 
+## 🔄 Story Generation Request Flow
+
+This diagram illustrates the step-by-step lifecycle of a story generation request, showing how it starts on the frontend, passes through backend validation, calls the AI providers, stores data in MongoDB, and finally returns to the user.
+
+```mermaid
+flowchart TD
+    User([👤 User]) -->|1. Submit prompt & configuration| Frontend["⚛️ Frontend (stories.component.tsx)"]
+    Frontend -->|2. POST request with payload| BackendAPI["⚙️ Backend API (story.router.ts)"]
+    BackendAPI -->|3. Validate request & JWT auth| AuthMiddleware["🔐 JWT Middleware / Validator"]
+    AuthMiddleware -->|4. Forward to Controller| StoryController["🎮 Story Controller (story.controller.ts)"]
+    StoryController -->|5. Forward payload & model choice| AIModelService["🤖 AI Model Service (ai_model.service.ts)"]
+    AIModelService -->|6. Query API| AIProvider["🧠 AI Provider (OpenAI / Gemini)"]
+    AIProvider -->|7. Return generated story content| AIModelService
+    AIModelService -->|8. Return to Controller| StoryController
+    StoryController -->|9. Save story & increment counts| MongoDB[("🗄️ MongoDB (Story Model / User Model)")]
+    MongoDB -->|10. Confirm persistence| StoryController
+    StoryController -->|11. Send XP & unlock check| GamificationService["🏆 Gamification / Streak Service"]
+    StoryController -->|12. Return HTTP 201 Created| Frontend
+    Frontend -->|13. Update UI state & display story| User
+```
+
+---
+
 ## 📂 Key Files for New Contributors
 
 | What you're working on | Start here |
