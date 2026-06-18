@@ -42,7 +42,7 @@ jest.mock("../config", () => ({
 
 // ── Imports after mocks ───────────────────────────────────────────────────────
 
-import { JwtHelpers } from "../app/utils/jwt.helper";
+import { JwtHelpers } from "../../utils/jwt.helper";
 import { reserveUserQuota } from "../app/modules/ai_model/quota.service";
 import { createUserQuotaGuard } from "../app/modules/ai_model/quota.lifecycle";
 import checkRequestLimit from "../app/middleware/check.request.limit";

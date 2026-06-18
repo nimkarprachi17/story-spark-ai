@@ -6,7 +6,7 @@ import httpStatus from "http-status";
 import { Comment } from "./comment.model";
 import { Types } from "mongoose";
 import { Post } from "../post/post.model";
-
+import { ENUM_USER_ROLE } from "../../../enums/user";
 const createComment = async (
   payload: ICommentPayload,
   token: ITokenPayload
@@ -22,6 +22,14 @@ const createComment = async (
   });
   if (!post) {
     throw new ApiError(httpStatus.BAD_REQUEST, "Post not found!");
+  }
+
+  // Content moderation — block inappropriate comments before persisting
+  try {
+    assertContentSafe(payload.comment);
+  } catch (moderationError) {
+    const msg = moderationError instanceof Error ? moderationError.message : "Comment blocked by content moderation.";
+    throw new ApiError(httpStatus.UNPROCESSABLE_ENTITY, msg);
   }
   // Use an atomic $inc update instead of the read-modify-write pattern.
   // With concurrent requests, both would read the same commentsCount value
@@ -100,7 +108,7 @@ const deleteComment = async (commentId: string, token: ITokenPayload) => {
   }
   // Only the comment author or an admin/super-admin can delete
   const isAuthor = comment.userId.toString() === user._id.toString();
-  const isAdmin = role === "ADMIN" || role === "SUPER_ADMIN";
+  const isAdmin = role === ENUM_USER_ROLE.ADMIN || role === ENUM_USER_ROLE.SUPER_ADMIN;
   if (!isAuthor && !isAdmin) {
     throw new ApiError(
       httpStatus.FORBIDDEN,

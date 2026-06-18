@@ -2,12 +2,13 @@ import express from "express";
 import { AuthController } from "./auth.controller";
 import validateRequest from "../../middleware/validate.request";
 import { UserValidator } from "../user/user.validation";
-import auth from "../../middleware/auth.middleware";
+import auth from "../middleware/auth.middleware";
 import { ENUM_USER_ROLE } from "../../../enums/user";
 import {
   loginRateLimiter,
   forgotPasswordRateLimiter,
   resetPasswordRateLimiter,
+  refreshTokenRateLimiter,
   ipRateLimiter,
 } from "../../middleware/ip.rate-limiter";
 
@@ -23,8 +24,7 @@ router.post(
 
 // Google Login API route
 router.post("/google-login", loginRateLimiter, AuthController.googleLogin);
-
-// Register API route
+router.post("/send-otp", validateRequest(UserValidator.sendOtp), AuthController.sendOtp);// Register API route
 router.post(
   "/register",
   validateRequest(UserValidator.register),
@@ -33,7 +33,7 @@ router.post(
 );
 
 // Refresh Token API route
-router.post("/refresh-token", AuthController.refreshToken);
+router.post("/refresh-token", refreshTokenRateLimiter, AuthController.refreshToken);
 
 // Logout API route
 router.post("/logout", AuthController.logout);
