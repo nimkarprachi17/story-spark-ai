@@ -85,7 +85,6 @@ const StoryInspirationComponent: React.FC = () => {
           <h1 className="text-5xl md:text-7xl xl:text-8xl font-black tracking-tight leading-[0.95] mb-8">
             <span className="block text-slate-900 dark:text-white">Story</span>
             <span className="block text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-blue-600 to-purple-600 dark:from-indigo-300 dark:via-blue-300 dark:to-purple-300">
-
               Inspiration Hub
             </span>
           </h1>
@@ -122,7 +121,7 @@ const StoryInspirationComponent: React.FC = () => {
             {[
               { value: inspirationData.length, label: "Story Inspirations", icon: "fa-book-open" },
               { value: genres.length - 1, label: "Creative Genres", icon: "fa-layer-group" },
-              { value: "∞", label: "Writing Possibilities", icon: "fa-sparkles" },
+              { value: "∞", label: "Writing Possibilities", icon: "fa-infinity" },
             ].map((item, index) => (
               <motion.div key={index} whileHover={{ y: -6 }} className="relative overflow-hidden rounded-[2rem] border border-white/60 dark:border-white/10 bg-white/80 dark:bg-white/[0.04] backdrop-blur-2xl p-7 shadow-xl shadow-black/[0.04]">
                 <div className="absolute top-0 right-0 w-28 h-28 bg-indigo-500/10 blur-3xl rounded-full" />

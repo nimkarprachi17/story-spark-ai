@@ -36,7 +36,7 @@ const SSInput = <T extends FieldValues>({
 }: SSInputProps<T>) => {
   const [showPassword, setShowPassword] = useState(false);
 
-<<<<<<< bug#1321
+
   const isPasswordType = type === "password";
   const inputType = isPasswordType
     ? showLocalPassword
@@ -56,7 +56,7 @@ const SSInput = <T extends FieldValues>({
       <div className="relative w-full min-w-0 max-w-full box-border">
         {icon && (
           <span className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center justify-center text-slate-400 dark:text-slate-500 z-10 pointer-events-none">
-=======
+
   const inputType =
     type === "password" ? (showPassword ? "text" : "password") : type;
 
@@ -78,12 +78,12 @@ const SSInput = <T extends FieldValues>({
       <div className="relative w-full max-w-full flex items-center box-border">
         {icon && (
           <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
->>>>>>> main
+
             <i className={icon}></i>
           </span>
         )}
 
-<<<<<<< bug#1321
+
         <input
           type={inputType}
           id={name}
@@ -122,7 +122,7 @@ const SSInput = <T extends FieldValues>({
           className="text-xs font-semibold text-rose-400 mt-1.5 text-left w-full break-words"
           aria-live="polite"
         >
-=======
+
        <input
   type={inputType}
   id={name}
@@ -169,7 +169,6 @@ const SSInput = <T extends FieldValues>({
 
       {error && (
         <p className="text-xs font-medium text-rose-500 mt-1.5 text-left w-full break-words overflow-hidden">
->>>>>>> main
           {error.message}
         </p>
       )}
