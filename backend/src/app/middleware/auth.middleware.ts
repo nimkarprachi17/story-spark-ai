@@ -8,34 +8,40 @@ import { User } from "../modules/user/user.model";
 import { TokenBlacklist } from "../modules/auth/tokenBlacklist.model";
 import { USER_STATUS } from "../../enums/user_status";
 
+type JwtVerifiedUser = {
+  _id: string;
+  tokenVersion?: number;
+  role?: string;
+};
+
 const auth = (...requiredRole: string[]) =>
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const authHeader = (req.headers.authorization || "") as string;
 
       // Support both header-based and cookie-based tokens.
-      // Logout() blacklists whatever token string it receives (header or cookie),
-      // so auth middleware must check the same token string source.
       const bearerToken = authHeader.startsWith("Bearer ")
         ? authHeader.slice(7).trim()
         : "";
 
-      const cookieToken =
-        (req as any).cookies?.accessToken || (req as any).cookies?.token;
+      const cookieToken = (req as any).cookies?.accessToken || (req as any).cookies?.token;
 
       const token = bearerToken || cookieToken || "";
 
       if (!token) {
-        throw new ApiError(httpStatus.UNAUTHORIZED, "You are not authorized to access");
+        throw new ApiError(
+          httpStatus.UNAUTHORIZED,
+          "You are not authorized to access"
+        );
       }
 
       const verifiedUser = JwtHelpers.verifyToken(
         token,
         config.jwt.secret as Secret
-      ) as any;
+      ) as unknown as JwtVerifiedUser;
 
+      // Ensure this exact token string is not blacklisted.
       const isBlacklisted = await TokenBlacklist.findOne({ token });
-
       if (isBlacklisted) {
         throw new ApiError(
           httpStatus.UNAUTHORIZED,
@@ -43,19 +49,24 @@ const auth = (...requiredRole: string[]) =>
         );
       }
 
-      const user = await User.findById(verifiedUser._id);
-
+      const user = await User.findById(verifiedUser?._id);
       if (!user) {
         throw new ApiError(httpStatus.UNAUTHORIZED, "User not found");
       }
 
-      if (user.tokenVersion !== verifiedUser.tokenVersion) {
+      // Token invalidation check (e.g., on refresh/logout via tokenVersion).
+      if (
+        user.tokenVersion !== undefined &&
+        verifiedUser?.tokenVersion !== undefined &&
+        user.tokenVersion !== verifiedUser.tokenVersion
+      ) {
         throw new ApiError(
           httpStatus.UNAUTHORIZED,
           "Token is invalid or expired"
         );
       }
 
+      // Status check
       if (user.status !== USER_STATUS.ACTIVE) {
         throw new ApiError(
           httpStatus.FORBIDDEN,
@@ -63,17 +74,18 @@ const auth = (...requiredRole: string[]) =>
         );
       }
 
+      // Role check (if roles are required)
       if (
         requiredRole.length &&
-        !requiredRole.includes(verifiedUser.role)
+        !requiredRole.includes(verifiedUser?.role as string)
       ) {
         throw new ApiError(httpStatus.FORBIDDEN, "Forbidden");
       }
 
       (req as any).user = user;
-      next();
+      return next();
     } catch (err) {
-      next(err);
+      return next(err);
     }
   };
 
