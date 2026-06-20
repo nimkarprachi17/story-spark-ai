@@ -13,10 +13,24 @@ const FORBIDDEN_PATTERNS: RegExp[] = [
   /disregard/i
 ];
 
+const canonicalizeSecurityText = (input: string): string => {
+  // Normalize & harden against common normalization-evasion techniques.
+  // - NFKC collapses compatibility variants
+  // - Remove common zero-width characters and BOM
+  // - Normalize whitespace (including NBSP) to single spaces
+  return (input ?? "")
+    .normalize("NFKC")
+    .replace(/\u200B|\u200C|\u200D|\uFEFF|\u2060|\u180E/g, "")
+    .replace(/[\s\u00A0]+/g, " ")
+    .trim();
+};
+
 export const validateAndFormatPrompt = (userPrompt: string): string => {
-  // 1. Semantic Filtering
+  const canonical = canonicalizeSecurityText(userPrompt);
+
+  // 1. Semantic Filtering (run against canonicalized input)
   for (const pattern of FORBIDDEN_PATTERNS) {
-    if (pattern.test(userPrompt)) {
+    if (pattern.test(canonical)) {
       throw new Error("Security Violation: Malicious prompt injection detected.");
     }
   }
@@ -30,9 +44,15 @@ export const validateAndFormatPrompt = (userPrompt: string): string => {
 
 export const validateOutput = (aiResponse: string): string => {
   // 4. Post-generation validation — check for leaked system instructions
-  const lowerResponse = aiResponse.toLowerCase();
-  if (lowerResponse.includes("system prompt:") || lowerResponse.includes("instructions:")) {
-     throw new Error("Security Violation: AI output leaked system instructions.");
+  const canonical = canonicalizeSecurityText(aiResponse).toLowerCase();
+
+  if (
+    canonical.includes("system prompt:") ||
+    canonical.includes("instructions:") ||
+    canonical.includes("system prompt") ||
+    canonical.includes("developer instructions")
+  ) {
+    throw new Error("Security Violation: AI output leaked system instructions.");
   }
 
   // 5. Content Moderation — block harmful/inappropriate output
@@ -40,3 +60,4 @@ export const validateOutput = (aiResponse: string): string => {
 
   return aiResponse;
 };
+
